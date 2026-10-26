@@ -16,6 +16,22 @@ service cloud.firestore {
         : 0;
     }
 
+    // Admin : le code saisi doit être identique à celui du document config/admin (jamais lisible par le site)
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.code
+           == get(/databases/$(database)/documents/config/admin).data.code;
+    }
+
+    match /admins/{uid} {
+      allow get: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['code'])
+        && request.resource.data.code is string
+        && request.resource.data.code == get(/databases/$(database)/documents/config/admin).data.code;
+    }
+
     // Rang déclaré (connexion Discord) : un document par utilisateur et par serveur
     match /claims/{id} {
       allow create, update: if request.auth != null
@@ -66,6 +82,7 @@ service cloud.firestore {
       // Suppression : le créateur, ou quelqu'un de rang supérieur sur ce serveur
       allow delete: if request.auth != null
         && (resource.data.ownerUid == request.auth.uid
+            || isAdmin()
             || claimRank(resource.data.get('guildId', '')) > resource.data.get('ownerRank', 0));
     }
 
