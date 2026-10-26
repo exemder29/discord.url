@@ -384,7 +384,6 @@ function loadFirebase() {
       .then(function (m) {
         var app = m[0].initializeApp(firebaseConfig);
         FB = Object.assign({}, m[1], m[2], { auth: m[1].getAuth(app), db: m[2].getFirestore(app) });
-        import(base + "firebase-analytics.js").then(function (a) { a.getAnalytics(app); }).catch(function () {});
         return FB;
       }, function (e) { last = e; return attempt(i + 1); });
   }
@@ -409,9 +408,14 @@ function ensureUid() {
 }
 
 /* ---------- Route : /mon-lien  ou  application ---------- */
-var path = decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g, "").toLowerCase();
+var path = "";
+try { path = decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g, "").toLowerCase(); } catch (e) { path = ""; }
 var isFile = location.protocol === "file:";
-if (path && path !== "index.html" && !isFile) { show($("redirect")); runRedirect(path); }
+/* Seul un vrai nom de lien (3-32 car. a-z 0-9 -) déclenche la redirection.
+   Tout le reste (/index.html, /public/index.html, /404.html, un sous-dossier d'aperçu…)
+   affiche simplement l'accueil au lieu d'une fausse « Erreur 404 ». */
+var isSlugPath = !isFile && SLUG_RE.test(path) && RESERVED.indexOf(path) < 0;
+if (isSlugPath) { show($("redirect")); runRedirect(path); }
 else { show($("app")); runApp(); }
 
 function runRedirect(slug) {
@@ -419,7 +423,7 @@ function runRedirect(slug) {
     show($("rBar"), false);
     if (!snap.exists()) {
       $("rEyebrow").textContent = "Erreur 404"; $("rTitle").textContent = "Lien introuvable";
-      $("rSub").textContent = "Ce lien n'existe pas ou a été supprimé."; $("rIcon").textContent = "🤷"; show($("rHome")); return;
+      $("rSub").textContent = "Aucun lien nommé « " + slug + " » n'existe, ou il a été supprimé."; $("rIcon").textContent = "🤷"; show($("rHome")); return;
     }
     var d = snap.data(); show($("rBar"));
     $("rIcon").textContent = ""; $("rIcon").appendChild(iconNode("", d.guildId, d.guildIcon, d.guildName));
@@ -455,7 +459,16 @@ function runApp() {
 }
 
 function copy(text, msg) {
-  (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function () { toast(msg || "Copié ✓"); }, function () { toast("Copie impossible : sélectionne le texte à la main", "err"); });
+  function fallback() {
+    try {
+      var ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly", "");
+      ta.style.cssText = "position:fixed;top:0;left:0;opacity:0"; document.body.appendChild(ta); ta.select();
+      var ok = document.execCommand("copy"); ta.remove();
+      toast(ok ? (msg || "Copié ✓") : "Copie impossible : sélectionne le texte à la main", ok ? "" : "err");
+    } catch (e) { toast("Copie impossible : sélectionne le texte à la main", "err"); }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { toast(msg || "Copié ✓"); }, fallback);
+  else fallback();
 }
 function loginError(t) { var e = $("loginErr"); e.textContent = t; show(e); }
 
@@ -620,7 +633,7 @@ function loadMyLinks() {
       var c = document.createElement("div"); c.className = "lk";
       var top = document.createElement("div"); top.className = "lk-top";
       var t = document.createElement("div"); t.style.minWidth = 0;
-      var a = document.createElement("a"); a.href = "/" + l.slug; a.target = "_blank"; a.rel = "noopener"; a.textContent = HOST + "/" + l.slug;
+      var a = document.createElement("a"); a.href = ORIGIN + "/" + l.slug; a.target = "_blank"; a.rel = "noopener"; a.textContent = HOST + "/" + l.slug;
       var s = document.createElement("small"); s.textContent = l.guildName;
       t.appendChild(a); t.appendChild(s); top.appendChild(iconNode("gi", l.guildId, l.guildIcon, l.guildName)); top.appendChild(t);
       var act = document.createElement("div"); act.className = "lk-act";
