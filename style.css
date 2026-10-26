@@ -1,0 +1,38 @@
+  :root { --bg:#1e1f22; --card:#2b2d31; --card2:#313338; --txt:#f2f3f5; --mut:#b5bac1; --brand:#5865f2; --brand2:#4752c4; --ok:#23a55a; --err:#f23f43; --line:#3f4147; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: "Segoe UI", system-ui, sans-serif; background:var(--bg); color:var(--txt); min-height:100vh; }
+  main { max-width:760px; margin:0 auto; padding:32px 16px 64px; }
+  h1 { font-size:28px; margin:0 0 6px; }
+  h2 { font-size:18px; margin:0 0 12px; }
+  p.sub { color:var(--mut); margin:0 0 24px; }
+  .card { background:var(--card); border-radius:12px; padding:20px; margin-bottom:16px; }
+  button { font:inherit; cursor:pointer; border:0; border-radius:8px; padding:10px 16px; background:var(--brand); color:#fff; font-weight:600; }
+  button:hover { background:var(--brand2); }
+  button.ghost { background:transparent; border:1px solid var(--line); color:var(--txt); }
+  button.ghost:hover { background:var(--card2); }
+  button.danger { background:var(--err); }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  input { font:inherit; width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--txt); }
+  input:focus { outline:2px solid var(--brand); border-color:transparent; }
+  label { display:block; font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--mut); margin:14px 0 6px; font-weight:700; }
+  .row { display:flex; gap:10px; align-items:center; }
+  .grow { flex:1; min-width:0; }
+  .prefix { color:var(--mut); white-space:nowrap; }
+  .guilds { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:10px; }
+  .guild { display:flex; gap:10px; align-items:center; padding:10px; background:var(--card2); border:2px solid transparent; border-radius:10px; cursor:pointer; text-align:left; color:var(--txt); font-weight:500; width:100%; }
+  .guild:hover { border-color:var(--line); background:var(--card2); }
+  .guild.sel { border-color:var(--brand); }
+  .guild img, .guild .ph { width:40px; height:40px; border-radius:50%; flex:none; background:var(--bg); display:grid; place-items:center; font-weight:700; }
+  .guild span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .user { display:flex; align-items:center; gap:10px; }
+  .user img { width:36px; height:36px; border-radius:50%; }
+  .msg { padding:10px 12px; border-radius:8px; margin-top:12px; font-size:14px; }
+  .msg.err { background:rgba(242,63,67,.15); color:#ff8a8c; }
+  .msg.ok { background:rgba(35,165,90,.15); color:#6fe0a1; }
+  .msg.warn { background:rgba(240,177,50,.15); color:#f5c96a; }
+  .link { display:flex; gap:10px; align-items:center; justify-content:space-between; padding:12px; background:var(--card2); border-radius:10px; margin-top:8px; flex-wrap:wrap; }
+  .link a { color:#9aa5ff; text-decoration:none; word-break:break-all; }
+  .small { font-size:13px; color:var(--mut); }
+  .hidden { display:none !important; }
+  .center { text-align:center; padding-top:20vh; }
+  .help { font-size:13px; color:var(--mut); margin-top:6px; }

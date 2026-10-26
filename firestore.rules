@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Slug : 3 à 32 caractères (a-z, 0-9, tirets), sans tiret au début/à la fin, hors mots réservés
+    function validSlug(s) {
+      return s.matches('^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$')
+        && !(s in ['admin', 'api', 'login', 'logout', 'auth', 'app', 'dashboard', 'index',
+                   'about', 'terms', 'privacy', 'help', 'support', 'discord', 'static']);
+    }
+
+    match /links/{slug} {
+      // Lecture d'un lien précis : publique (nécessaire pour la redirection des visiteurs)
+      allow get: if true;
+
+      // Lister : uniquement ses propres liens (requête where ownerUid == mon uid)
+      allow list: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+
+      // Création : connecté, slug valide et libre (create échoue si le document existe déjà)
+      allow create: if request.auth != null
+        && validSlug(slug)
+        && request.resource.data.keys().hasOnly(['slug', 'invite', 'guildId', 'guildName', 'guildIcon', 'ownerUid', 'ownerDiscordId', 'ownerName', 'createdAt'])
+        && request.resource.data.keys().hasAll(['slug', 'invite', 'guildId', 'guildName', 'ownerUid', 'ownerDiscordId', 'createdAt'])
+        && request.resource.data.slug == slug
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.invite is string
+        && request.resource.data.invite.matches('^https://discord\\.gg/[A-Za-z0-9-]{2,32}$')
+        && request.resource.data.guildId is string
+        && request.resource.data.guildId.matches('^[0-9]{15,22}$')
+        && request.resource.data.ownerDiscordId is string
+        && request.resource.data.ownerDiscordId.matches('^[0-9]{15,22}$')
+        && request.resource.data.guildName is string
+        && request.resource.data.guildName.size() <= 100
+        && (!('guildIcon' in request.resource.data) || request.resource.data.guildIcon == null
+            || (request.resource.data.guildIcon is string && request.resource.data.guildIcon.size() <= 64))
+        && (!('ownerName' in request.resource.data) || (request.resource.data.ownerName is string && request.resource.data.ownerName.size() <= 100))
+        && request.resource.data.createdAt == request.time;
+
+      // Pas de modification : on supprime puis on recrée
+      allow update: if false;
+
+      // Suppression : uniquement par le créateur
+      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // Tout le reste est interdit
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>URL Discord personnalisée</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<div id="redirect" class="center hidden">
+  <h1 id="redirTitle">Redirection…</h1>
+  <p class="sub" id="redirSub"></p>
+  <p><a id="redirHome" href="/" class="hidden" style="color:#9aa5ff">← Créer mon propre lien</a></p>
+</div>
+
+<main id="app" class="hidden">
+  <h1>🔗 URL Discord personnalisée</h1>
+  <p class="sub">Connecte-toi avec Discord, choisis ton serveur et crée un lien court et facile à retenir.</p>
+
+  <section id="login" class="card hidden">
+    <h2>Connexion</h2>
+    <p class="small">On lit uniquement ton profil et la liste de tes serveurs pour te proposer ceux que tu gères.</p>
+    <button id="btnLogin">Se connecter avec Discord</button>
+    <div id="loginErr" class="msg err hidden"></div>
+  </section>
+
+  <div id="logged" class="hidden">
+    <section class="card">
+      <div class="row">
+        <div class="user grow"><img id="uAvatar" alt=""><strong id="uName"></strong></div>
+        <button class="ghost" id="btnLogout">Déconnexion</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>1. Choisis ton serveur</h2>
+      <div id="guilds" class="guilds"></div>
+      <p id="noGuild" class="small hidden">Aucun serveur trouvé où tu as la permission « Gérer le serveur ».</p>
+    </section>
+
+    <section class="card hidden" id="formCard">
+      <h2>2. Crée ton lien</h2>
+      <label for="slug">Nom du lien</label>
+      <div class="row"><span class="prefix" id="prefix"></span><input id="slug" class="grow" maxlength="32" placeholder="mon-serveur" autocomplete="off"></div>
+      <div class="help">3 à 32 caractères : lettres minuscules, chiffres et tirets.</div>
+      <label for="invite">Invitation Discord permanente</label>
+      <input id="invite" placeholder="https://discord.gg/abcdEF">
+      <div class="help">Crée une invitation avec l'expiration « Jamais », sur ce serveur, puis colle-la ici.</div>
+      <div style="margin-top:16px"><button id="btnCreate">Créer le lien</button></div>
+      <div id="formMsg" class="msg hidden"></div>
+    </section>
+
+    <section class="card">
+      <h2>Mes liens</h2>
+      <div id="myLinks"><p class="small">Chargement…</p></div>
+    </section>
+  </div>
+</main>
+
+<script type="module" src="/script.js"></script>
+</body>
+</html>
