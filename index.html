@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Discord Url Generator</title>
+<title>DiscordLink — le lien de ton serveur</title>
 <meta name="theme-color" content="#7b2ff7">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='18' fill='%235865f2'/><path d='M26 38l12-12M29 24l4-4a8 8 0 0 1 11 11l-4 4M35 40l-4 4a8 8 0 0 1-11-11l4-4' stroke='white' stroke-width='5' stroke-linecap='round' fill='none'/></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -216,16 +216,16 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
     <div class="urlbar"><span class="h" id="hHost"></span><span class="t" id="typed"></span><span class="caret"></span></div>
 
     <div class="cta">
-      <button id="btnLogin" class="btn xl">
-        <svg viewBox="0 0 24 24" width="32" height="32" fill="#fff"><path d="M20.317 4.37a19.79 19.79 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.74 19.74 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.1 13.1 0 01-1.872-.892.077.077 0 01-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 01.078-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.079.009c.12.099.246.198.373.292a.077.077 0 01-.006.127 12.3 12.3 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.84 19.84 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-        Se connecter avec Discord
+      <button id="btnFree" class="btn xl green">🚀 Créer mon lien (n'importe quel serveur)</button>
+      <button id="btnLogin" class="btn glass">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="#fff"><path d="M20.317 4.37a19.79 19.79 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.74 19.74 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.1 13.1 0 01-1.872-.892.077.077 0 01-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 01.078-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.079.009c.12.099.246.198.373.292a.077.077 0 01-.006.127 12.3 12.3 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.84 19.84 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+        Se connecter avec Discord (facultatif)
       </button>
-      <button id="btnDemo" class="btn glass">👀 Voir l'interface sans se connecter</button>
       <div id="loginErr" class="alert err hidden"></div>
     </div>
 
     <div class="how">
-      <div><div class="n">1</div><h3>Connecte-toi</h3><p>On repère automatiquement les serveurs que tu gères.</p></div>
+      <div><div class="n">1</div><h3>Colle ton invitation</h3><p>Celle de n'importe quel serveur. Connexion Discord facultative.</p></div>
       <div><div class="n">2</div><h3>Choisis un nom</h3><p>Ex : <b id="exHost"></b>/ma-team</p></div>
       <div><div class="n">3</div><h3>Partage !</h3><p>Ton lien redirige direct vers ton serveur.</p></div>
     </div>
@@ -233,7 +233,7 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
     <details class="help" id="help">
       <summary>🛠️ Ça ne marche pas ? Vérifie la configuration</summary>
       <ol>
-        <li>Dans <code>index.html</code>, en haut du script : colle le <b>Client ID</b> de ton application Discord.</li>
+        <li>(Facultatif, seulement pour « Se connecter avec Discord ») Dans <code>index.html</code>, en haut du script : colle le <b>Client ID</b> de ton application Discord.</li>
         <li>Discord → OAuth2 → <b>Redirects</b> : ajoute exactement
           <div class="copyline"><code id="ruri"></code><button class="btn sm glass" id="cpRuri">Copier</button></div></li>
         <li>Firebase → Authentication → Méthode de connexion → <b>Anonyme</b> : activer.</li>
@@ -247,19 +247,20 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
   <main id="dash" class="hidden">
     <div class="dash-head">
       <h1>Salut <span class="rainbow" id="hello"></span> 👋</h1>
-      <p class="mut" style="font-weight:700;font-size:18px">Choisis ton serveur, donne-lui un nom, et c'est parti !</p>
+      <p class="mut" style="font-weight:700;font-size:18px">Donne un nom à ton lien, colle l'invitation de n'importe quel serveur, et c'est parti !</p>
       <div id="demoTag" class="alert warn hidden" style="margin:16px auto 0">🎮 Mode démo : tu peux tout essayer, mais rien n'est enregistré. <a href="/" style="color:#fff">Se connecter</a></div>
     </div>
 
     <div class="layout">
       <div>
         <section class="panel">
-          <div class="ptitle"><span class="num">1</span><h2>Ton serveur</h2></div>
+          <div class="ptitle"><span class="num">1</span><h2>Ton serveur <small style="font-size:15px;opacity:.8">(optionnel)</small></h2></div>
           <div id="guilds" class="guilds"></div>
+          <div id="guildHelp" class="hidden"><p style="font-weight:700;margin-bottom:14px">Pas besoin de choisir un serveur : colle simplement l'invitation de <b>n'importe quel serveur</b> à l'étape 2. Tu peux aussi te connecter pour choisir un serveur que tu gères.</p><button id="btnLogin2" class="btn glass sm">Se connecter avec Discord</button></div>
           <p id="noGuild" class="hidden" style="font-weight:700">Aucun serveur où tu as la permission « Gérer le serveur ».</p>
         </section>
 
-        <section class="panel locked" id="formPanel">
+        <section class="panel" id="formPanel">
           <div class="ptitle"><span class="num">2</span><h2>Ton lien</h2></div>
           <label for="slug">Le nom de ton lien</label>
           <div class="field"><span class="pre" id="pre"></span><input id="slug" maxlength="32" placeholder="mon-serveur" autocomplete="off" spellcheck="false"><span class="st" id="slugSt"></span></div>
@@ -280,7 +281,7 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
           <div class="bd">
             <div class="pi" id="pvI">?</div>
             <h3 id="pvN">Ton serveur</h3>
-            <p id="pvS">Choisis un serveur pour voir l'aperçu</p>
+            <p id="pvS">Aperçu de ton lien</p>
             <div class="pu"><span id="pvH"></span><b id="pvSlug">ton-nom</b></div>
             <div class="pb">Rejoindre le serveur</div>
           </div>
@@ -302,7 +303,7 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
 /* =====================================================================
    ⚙️ CONFIGURATION — la seule chose à modifier
    ===================================================================== */
-var DISCORD_CLIENT_ID = "1564338650450366495";   // Discord Developer Portal → ton app → OAuth2 → Client ID
+var DISCORD_CLIENT_ID = "COLLE_TON_CLIENT_ID_ICI";   // Discord Developer Portal → ton app → OAuth2 → Client ID
 
 /* Adresse EXACTE de ton site (optionnel). Laisse vide : détection automatique.
    GitHub Pages « projet » : "https://TON-PSEUDO.github.io/NOM-DU-DEPOT/"
@@ -467,7 +468,7 @@ function runApp() {
   if (isFile) { loginError("Tu as ouvert le fichier directement. Ouvre plutôt ton site Firebase (https://" + "url-discord-generator.web.app) : la connexion Discord ne marche que depuis une vraie adresse."); $("help").open = true; }
 
   $("btnLogin").onclick = login;
-  $("btnDemo").onclick = startDemo;
+  $("btnFree").onclick = startFree; $("btnLogin2").onclick = login;
   $("btnOut").onclick = function () { sessionStorage.removeItem("dc_session"); if (FB) FB.auth.signOut().catch(function () {}); location.href = REDIRECT_URI; };
   $("btnCreate").onclick = createLink;
   $("slug").addEventListener("input", onSlug);
@@ -521,7 +522,7 @@ function consumeCallback() {
 function stored() { try { var s = JSON.parse(sessionStorage.getItem("dc_session") || "null"); return s && s.exp > Date.now() ? s : null; } catch (e) { return null; } }
 
 function loadSession(token) {
-  show($("btnLogin"), false); show($("btnDemo"), false);
+  show($("btnLogin"), false); show($("btnFree"), false);
   var H = { headers: { Authorization: "Bearer " + token } };
   Promise.all([fetch(API + "/users/@me", H), fetch(API + "/users/@me/guilds", H)]).then(function (r) {
     if (r[0].status === 401 || r[1].status === 401) throw new Error("Ta session Discord a expiré, reconnecte-toi.");
@@ -534,9 +535,16 @@ function loadSession(token) {
     return ensureUid();
   }).then(function (u) { uid = u; openDash(); loadMyLinks(); })
   .catch(function (e) {
-    sessionStorage.removeItem("dc_session"); show($("btnLogin")); show($("btnDemo"));
+    sessionStorage.removeItem("dc_session"); show($("btnLogin")); show($("btnFree"));
     loginError(e.code ? fbError(e) : e.message); $("help").open = true;
   });
+}
+
+function startFree() {
+  demo = false; session = null; selected = null;
+  $("hello").textContent = "toi"; show($("navUser"), false); show($("home"), false); show($("dash")); show($("guildHelp")); show($("noGuild"), false);
+  $("guilds").textContent = "";
+  ensureUid().then(function (u) { uid = u; loadMyLinks(); }).catch(function (e) { msg(fbError(e), "err"); });
 }
 
 function startDemo() {
@@ -551,7 +559,7 @@ function openDash() {
   var u = session.user, name = u.global_name || u.username;
   $("uName").textContent = name; $("hello").textContent = name;
   $("uAv").src = u.avatar ? "https://cdn.discordapp.com/avatars/" + u.id + "/" + u.avatar + ".png?size=64" : "https://cdn.discordapp.com/embed/avatars/0.png";
-  show($("navUser")); show($("home"), false); show($("dash"));
+  show($("navUser")); show($("home"), false); show($("dash")); show($("guildHelp"), false);
   renderGuilds();
 }
 
@@ -568,6 +576,10 @@ function renderGuilds() {
 }
 
 function pick(g, btn) {
+  if (selected && selected.id === g.id) {
+    selected = null; btn.classList.remove("sel"); $("pvN").textContent = "Ton serveur"; $("pvS").textContent = "Aperçu de ton lien";
+    var p0 = $("pvI"); p0.textContent = "?"; refresh(); return;
+  }
   selected = g;
   Array.prototype.forEach.call(document.querySelectorAll(".guild"), function (x) { x.classList.remove("sel"); });
   btn.classList.add("sel"); $("formPanel").classList.remove("locked");
@@ -607,32 +619,39 @@ function onInvite() {
   if (!v.trim()) setSt(inp, $("invSt"), "", ""); else if (parseInvite(v)) setSt(inp, $("invSt"), "ok", "Format ✓"); else setSt(inp, $("invSt"), "no", "Invalide");
   refresh();
 }
-function refresh() { $("btnCreate").disabled = !(selected && slugOk && parseInvite($("invite").value)); }
+function refresh() { $("btnCreate").disabled = !(slugOk && parseInvite($("invite").value)); }
 function msg(t, k) { var e = $("formMsg"); e.className = "alert " + k; e.textContent = t; }
 
 /* ----- Création du lien ----- */
 function createLink() {
   var slug = $("slug").value, code = parseInvite($("invite").value);
-  if (!selected || !slugOk || !code) return;
+  if (!slugOk || !code) return;
   if (demo) { confetti(); msg("🎮 Mode démo : voilà ce que ça donnerait → " + HOST + "/" + slug + ". Connecte-toi pour le créer pour de vrai !", "warn"); return; }
   $("btnCreate").disabled = true; msg("Vérification de l'invitation…", "warn");
-  var note = "";
+  var note = "", info = null;
   fetch(API + "/invites/" + code).then(function (r) {
     if (r.status === 404) throw new Error("Cette invitation n'existe pas ou a expiré.");
     return r.ok ? r.json() : null;
   }).then(function (inv) {
-    if (inv && inv.guild && inv.guild.id !== selected.id) throw new Error("Cette invitation mène vers « " + inv.guild.name + " », pas vers « " + selected.name + " ».");
+    info = inv;
+    if (selected && inv && inv.guild && inv.guild.id !== selected.id) throw new Error("Cette invitation mène vers « " + inv.guild.name + " », pas vers « " + selected.name + " ».");
     if (inv && inv.expires_at) throw new Error("Cette invitation expire un jour. Crée-en une avec l'expiration « Jamais ».");
   }, function (e) { if (e instanceof TypeError) note = " (invitation non vérifiée)"; else throw e; })
   .then(function () { return ensureUid(); })
   .then(function (u) {
     uid = u;
-    return FB.setDoc(FB.doc(FB.db, "links", slug), {
+    var g = selected || (info && info.guild) || {};
+    var data = {
       slug: slug, invite: "https://discord.gg/" + code,
-      guildId: selected.id, guildName: selected.name.slice(0, 100), guildIcon: selected.icon || null,
-      ownerUid: uid, ownerDiscordId: session.user.id, ownerName: (session.user.global_name || session.user.username).slice(0, 100),
-      createdAt: FB.serverTimestamp()
-    });
+      guildName: String(g.name || "Serveur Discord").slice(0, 100), guildIcon: g.icon || null,
+      ownerUid: uid, createdAt: FB.serverTimestamp()
+    };
+    if (g.id && /^[0-9]{15,22}$/.test(g.id)) data.guildId = g.id;
+    if (session && session.user && /^[0-9]{15,22}$/.test(session.user.id)) {
+      data.ownerDiscordId = session.user.id;
+      data.ownerName = (session.user.global_name || session.user.username).slice(0, 100);
+    }
+    return FB.setDoc(FB.doc(FB.db, "links", slug), data);
   }).then(function () {
     msg("✅ Ton lien est prêt : " + HOST + "/" + slug + note, "ok"); confetti();
     copy(ORIGIN + "/" + slug, "Lien copié dans le presse-papiers ✓");

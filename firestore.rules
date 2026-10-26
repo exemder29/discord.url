@@ -16,21 +16,22 @@ service cloud.firestore {
       // Lister : uniquement ses propres liens (requête where ownerUid == mon uid)
       allow list: if request.auth != null && resource.data.ownerUid == request.auth.uid;
 
-      // Création : connecté, slug valide et libre (create échoue si le document existe déjà)
+      // Création : connecté (anonyme suffit), n'importe quel serveur, slug valide et libre (create échoue si le document existe déjà)
       allow create: if request.auth != null
         && validSlug(slug)
         && request.resource.data.keys().hasOnly(['slug', 'invite', 'guildId', 'guildName', 'guildIcon', 'ownerUid', 'ownerDiscordId', 'ownerName', 'createdAt'])
-        && request.resource.data.keys().hasAll(['slug', 'invite', 'guildId', 'guildName', 'ownerUid', 'ownerDiscordId', 'createdAt'])
+        && request.resource.data.keys().hasAll(['slug', 'invite', 'guildName', 'ownerUid', 'createdAt'])
         && request.resource.data.slug == slug
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.invite is string
         && request.resource.data.invite.matches('^https://discord\\.gg/[A-Za-z0-9-]{2,32}$')
-        && request.resource.data.guildId is string
-        && request.resource.data.guildId.matches('^[0-9]{15,22}$')
-        && request.resource.data.ownerDiscordId is string
-        && request.resource.data.ownerDiscordId.matches('^[0-9]{15,22}$')
         && request.resource.data.guildName is string
+        && request.resource.data.guildName.size() >= 1
         && request.resource.data.guildName.size() <= 100
+        && (!('guildId' in request.resource.data)
+            || (request.resource.data.guildId is string && request.resource.data.guildId.matches('^[0-9]{15,22}$')))
+        && (!('ownerDiscordId' in request.resource.data)
+            || (request.resource.data.ownerDiscordId is string && request.resource.data.ownerDiscordId.matches('^[0-9]{15,22}$')))
         && (!('guildIcon' in request.resource.data) || request.resource.data.guildIcon == null
             || (request.resource.data.guildIcon is string && request.resource.data.guildIcon.size() <= 64))
         && (!('ownerName' in request.resource.data) || (request.resource.data.ownerName is string && request.resource.data.ownerName.size() <= 100))
