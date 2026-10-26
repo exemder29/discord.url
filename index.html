@@ -304,6 +304,11 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
    ===================================================================== */
 var DISCORD_CLIENT_ID = "COLLE_TON_CLIENT_ID_ICI";   // Discord Developer Portal → ton app → OAuth2 → Client ID
 
+/* Adresse EXACTE de ton site (optionnel). Laisse vide : détection automatique.
+   GitHub Pages « projet » : "https://TON-PSEUDO.github.io/NOM-DU-DEPOT/"
+   GitHub Pages « utilisateur » (dépôt TON-PSEUDO.github.io) ou Firebase : laisse "" */
+var SITE_URL = "";
+
 var firebaseConfig = {
   apiKey: "AIzaSyDH1JRDT2EClO7_awG0h3-p6II70ITTbBU",
   authDomain: "url-discord-generator.firebaseapp.com",
@@ -320,8 +325,20 @@ var firebaseConfig = {
 var $ = function (id) { return document.getElementById(id); };
 var show = function (el, on) { el.classList.toggle("hidden", on === false); };
 var HOST = location.host || "ton-site.web.app";
-var ORIGIN = location.origin && location.origin !== "null" ? location.origin : "https://" + HOST;
+var ORIGIN0 = location.origin && location.origin !== "null" ? location.origin : "https://" + HOST;
+/* Sous-dossier du site (GitHub Pages « projet » : /nom-du-depot). Vide sur Firebase / domaine perso. */
+var BASE = (function () {
+  if (SITE_URL) { try { return new URL(SITE_URL).pathname.replace(/\/+$/, ""); } catch (e) {} }
+  if (/\.github\.io$/i.test(location.hostname)) {
+    var seg = location.pathname.split("/")[1] || "";
+    if (seg && !/^(index|404)\.html$/i.test(seg)) return "/" + seg;
+  }
+  return "";
+})();
+var ORIGIN = ORIGIN0 + BASE;
+HOST = HOST + BASE;
 var REDIRECT_URI = ORIGIN + "/";
+Array.prototype.forEach.call(document.querySelectorAll('a[href="/"]'), function (a) { a.href = REDIRECT_URI; });
 var SLUG_RE = /^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/;
 var RESERVED = ["admin","api","login","logout","auth","app","dashboard","index","about","terms","privacy","help","support","discord","static"];
 var API = "https://discord.com/api/v10";
@@ -409,7 +426,11 @@ function ensureUid() {
 
 /* ---------- Route : /mon-lien  ou  application ---------- */
 var path = "";
-try { path = decodeURIComponent(location.pathname).replace(/^\/+|\/+$/g, "").toLowerCase(); } catch (e) { path = ""; }
+try {
+  path = decodeURIComponent(location.pathname);
+  if (BASE && path.toLowerCase().indexOf(BASE.toLowerCase()) === 0) path = path.slice(BASE.length);
+  path = path.replace(/^\/+|\/+$/g, "").toLowerCase();
+} catch (e) { path = ""; }
 var isFile = location.protocol === "file:";
 /* Seul un vrai nom de lien (3-32 car. a-z 0-9 -) déclenche la redirection.
    Tout le reste (/index.html, /public/index.html, /404.html, un sous-dossier d'aperçu…)
@@ -447,7 +468,7 @@ function runApp() {
 
   $("btnLogin").onclick = login;
   $("btnDemo").onclick = startDemo;
-  $("btnOut").onclick = function () { sessionStorage.removeItem("dc_session"); if (FB) FB.auth.signOut().catch(function () {}); location.href = "/"; };
+  $("btnOut").onclick = function () { sessionStorage.removeItem("dc_session"); if (FB) FB.auth.signOut().catch(function () {}); location.href = REDIRECT_URI; };
   $("btnCreate").onclick = createLink;
   $("slug").addEventListener("input", onSlug);
   $("invite").addEventListener("input", onInvite);
