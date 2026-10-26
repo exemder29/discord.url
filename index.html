@@ -130,6 +130,8 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
 #btnCreate{width:100%;margin-top:24px}
 #formMsg{margin-top:16px}
 
+.fmsg{margin-top:8px;font-weight:800;font-size:14px;line-height:1.35}.fmsg:empty{display:none}
+.fmsg.ok{color:#4dffb0}.fmsg.no{color:#ffb3c1}.fmsg.wait{color:#eee}.fmsg.warn{color:#ffe08a}
 /* ---- aperçu ---- */
 .side{position:sticky;top:16px}
 .pv{background:#fff;color:#232550;border-radius:30px;overflow:hidden;box-shadow:0 12px 0 rgba(0,0,0,.2),0 30px 50px rgba(0,0,0,.3);transform:rotate(1.5deg);transition:transform .3s}
@@ -248,6 +250,7 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
     <div class="dash-head">
       <h1>Salut <span class="rainbow" id="hello"></span> 👋</h1>
       <p class="mut" style="font-weight:700;font-size:18px">Donne un nom à ton lien, colle l'invitation de n'importe quel serveur, et c'est parti !</p>
+      <p id="rankInfo" class="mut hidden" style="font-weight:800;margin-top:10px"></p>
       <div id="demoTag" class="alert warn hidden" style="margin:16px auto 0">🎮 Mode démo : tu peux tout essayer, mais rien n'est enregistré. <a href="/" style="color:#fff">Se connecter</a></div>
     </div>
 
@@ -256,7 +259,7 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
         <section class="panel">
           <div class="ptitle"><span class="num">1</span><h2>Ton serveur <small style="font-size:15px;opacity:.8">(optionnel)</small></h2></div>
           <div id="guilds" class="guilds"></div>
-          <div id="guildHelp" class="hidden"><p style="font-weight:700;margin-bottom:14px">Pas besoin de choisir un serveur : colle simplement l'invitation de <b>n'importe quel serveur</b> à l'étape 2. Tu peux aussi te connecter pour choisir un serveur que tu gères.</p><button id="btnLogin2" class="btn glass sm">Se connecter avec Discord</button></div>
+          <div id="guildHelp" class="hidden"><p style="font-weight:700;margin-bottom:14px">Pas besoin de choisir un serveur : colle simplement l'invitation de <b>n'importe quel serveur</b> à l'étape 2. Connecté avec Discord, tu peux aussi gérer les liens des autres sur tes serveurs : <b>👑 propriétaire &gt; 🛠️ gestionnaire &gt; 👤 visiteur</b>. Un rang supérieur peut supprimer les liens d'un rang inférieur.</p><button id="btnLogin2" class="btn glass sm">Se connecter avec Discord</button></div>
           <p id="noGuild" class="hidden" style="font-weight:700">Aucun serveur où tu as la permission « Gérer le serveur ».</p>
         </section>
 
@@ -265,10 +268,12 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
           <label for="slug">Le nom de ton lien</label>
           <div class="field"><span class="pre" id="pre"></span><input id="slug" maxlength="32" placeholder="mon-serveur" autocomplete="off" spellcheck="false"><span class="st" id="slugSt"></span></div>
           <small class="hint">3 à 32 caractères : lettres, chiffres et tirets.</small>
+          <div class="fmsg" id="slugMsg"></div>
 
           <label for="invite">Ton invitation Discord permanente</label>
           <div class="field"><span class="pre">🔗</span><input id="invite" placeholder="https://discord.gg/abcdEF" autocomplete="off" spellcheck="false"><span class="st" id="invSt"></span></div>
           <small class="hint">Dans Discord : Inviter des gens → Modifier le lien → « Expire après : <b>Jamais</b> ».</small>
+          <div class="fmsg" id="invMsg"></div>
 
           <button id="btnCreate" class="btn green xl" style="animation:none" disabled>🚀 Créer mon lien</button>
           <div id="formMsg" class="alert hidden"></div>
@@ -294,7 +299,7 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
     <div id="myLinks" class="links"></div>
   </main>
 
-  <div class="foot">Fait avec 💜 · Non affilié à Discord Inc.</div>
+  <div class="foot">Fait avec 💜 · Non affilié à Discord Inc. · <a href="#" id="btnAdmin" style="color:#fff">🔐 Admin</a></div>
 </div>
 
 <div id="toasts"></div>
@@ -303,7 +308,7 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
 /* =====================================================================
    ⚙️ CONFIGURATION — la seule chose à modifier
    ===================================================================== */
-var DISCORD_CLIENT_ID = "1564338650450366495";   // Discord Developer Portal → ton app → OAuth2 → Client ID
+var DISCORD_CLIENT_ID = "COLLE_TON_CLIENT_ID_ICI";   // Discord Developer Portal → ton app → OAuth2 → Client ID
 
 /* Adresse EXACTE de ton site (optionnel). Laisse vide : détection automatique.
    GitHub Pages « projet » : "https://TON-PSEUDO.github.io/NOM-DU-DEPOT/"
@@ -464,7 +469,7 @@ function runRedirect(slug) {
 }
 
 /* ---------- Application ---------- */
-var session = null, selected = null, uid = null, demo = false, slugOk = false, slugTimer;
+var session = null, selected = null, uid = null, demo = false, slugOk = false, slugTimer, isAdmin = false, slugAuto = true, slugReplace = null, inviteOk = false, inviteTimer;
 
 function runApp() {
   $("hHost").textContent = HOST + "/"; $("pre").textContent = HOST + "/"; $("pvH").textContent = HOST + "/";
@@ -477,8 +482,8 @@ function runApp() {
   $("btnLogin").onclick = login;
   $("btnFree").onclick = startFree; $("btnLogin2").onclick = login;
   $("btnOut").onclick = function () { sessionStorage.removeItem("dc_session"); if (FB) FB.auth.signOut().catch(function () {}); location.href = REDIRECT_URI; };
-  $("btnCreate").onclick = createLink;
-  $("slug").addEventListener("input", onSlug);
+  $("btnCreate").onclick = createLink; $("btnAdmin").onclick = adminLogin;
+  $("slug").addEventListener("input", function () { slugAuto = false; onSlug(); });
   $("invite").addEventListener("input", onInvite);
 
   var cb = consumeCallback();
@@ -549,7 +554,7 @@ function loadSession(token) {
 
 function startFree() {
   demo = false; session = null; selected = null;
-  $("hello").textContent = "toi"; show($("navUser"), false); show($("home"), false); show($("dash")); show($("guildHelp")); show($("noGuild"), false);
+  $("hello").textContent = "toi"; show($("navUser"), false); show($("rankInfo"), false); show($("home"), false); show($("dash")); show($("guildHelp")); show($("noGuild"), false);
   $("guilds").textContent = "";
   loadMyLinks();
 }
@@ -567,6 +572,9 @@ function openDash() {
   $("uName").textContent = name; $("hello").textContent = name;
   $("uAv").src = u.avatar ? "https://cdn.discordapp.com/avatars/" + u.id + "/" + u.avatar + ".png?size=64" : "https://cdn.discordapp.com/embed/avatars/0.png";
   show($("navUser")); show($("home"), false); show($("dash")); show($("guildHelp"), false);
+  var ow = session.guilds.filter(function (g) { return g.owner; }).length;
+  $("rankInfo").textContent = "Connecté avec Discord · 👑 propriétaire de " + ow + " serveur(s) · 🛠️ gestionnaire de " + (session.guilds.length - ow) + " serveur(s)"; show($("rankInfo"));
+  document.querySelector(".sec h2").textContent = "Mes liens & ceux de mes serveurs";
   renderGuilds();
 }
 
@@ -585,7 +593,7 @@ function renderGuilds() {
 function pick(g, btn) {
   if (selected && selected.id === g.id) {
     selected = null; btn.classList.remove("sel"); $("pvN").textContent = "Ton serveur"; $("pvS").textContent = "Aperçu de ton lien";
-    var p0 = $("pvI"); p0.textContent = "?"; refresh(); return;
+    var p0 = $("pvI"); p0.textContent = "?"; if ($("invite").value.trim()) onInvite(); refresh(); return;
   }
   selected = g;
   Array.prototype.forEach.call(document.querySelectorAll(".guild"), function (x) { x.classList.remove("sel"); });
@@ -593,27 +601,43 @@ function pick(g, btn) {
   $("pvN").textContent = g.name; $("pvS").textContent = g.owner ? "Tu es le propriétaire" : "Tu gères ce serveur";
   var pi = $("pvI"); pi.textContent = "";
   var u = iconUrl(g.id, g.icon); if (u) { var im = document.createElement("img"); im.src = u; im.alt = ""; pi.appendChild(im); } else pi.textContent = initials(g.name);
-  if (!$("slug").value) {
+  if (!$("slug").value || slugAuto) {
+    slugAuto = true;
     $("slug").value = g.name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 32);
     onSlug();
   }
+  if ($("invite").value.trim()) onInvite();
   refresh();
 }
 
-function setSt(inp, st, kind, text) { inp.parentElement.classList.toggle("good", kind === "ok"); inp.parentElement.classList.toggle("bad", kind === "no"); st.className = "st " + kind; st.textContent = text; }
+function setSt(inp, st, kind, text, long, mk) {
+  inp.parentElement.classList.toggle("good", kind === "ok"); inp.parentElement.classList.toggle("bad", kind === "no");
+  st.className = "st " + kind; st.textContent = text;
+  var m = $(st.id === "slugSt" ? "slugMsg" : "invMsg"); m.className = "fmsg " + (mk || kind); m.textContent = long || "";
+}
 function onSlug() {
-  var inp = $("slug"); inp.value = inp.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-  var v = inp.value; $("pvSlug").textContent = v || "ton-nom"; slugOk = false; clearTimeout(slugTimer); refresh();
+  var inp = $("slug");
+  inp.value = inp.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  var v = inp.value; $("pvSlug").textContent = v || "ton-nom"; slugOk = false; slugReplace = null; clearTimeout(slugTimer); refresh();
   if (!v) return setSt(inp, $("slugSt"), "", "");
-  if (!SLUG_RE.test(v)) return setSt(inp, $("slugSt"), "no", v.length < 3 ? "Trop court" : "Invalide");
-  if (RESERVED.indexOf(v) >= 0) return setSt(inp, $("slugSt"), "no", "Réservé");
-  if (demo) { slugOk = true; setSt(inp, $("slugSt"), "ok", "Disponible ✓"); return refresh(); }
-  setSt(inp, $("slugSt"), "wait", "Vérification…");
+  if (!SLUG_RE.test(v)) return setSt(inp, $("slugSt"), "no", v.length < 3 ? "Trop court" : "Invalide", "❌ Le nom doit faire 3 à 32 caractères (lettres, chiffres, tirets), sans tiret au début ni à la fin.");
+  if (RESERVED.indexOf(v) >= 0) return setSt(inp, $("slugSt"), "no", "Réservé", "❌ Ce nom est réservé, choisis-en un autre.");
+  if (demo) { slugOk = true; setSt(inp, $("slugSt"), "ok", "Disponible ✓", "✅ Ce nom est disponible"); return refresh(); }
+  setSt(inp, $("slugSt"), "wait", "Vérification…", "⏳ Vérification du nom…");
   slugTimer = setTimeout(function () {
-    loadFirebase().then(function (fb) { return fb.getDoc(fb.doc(fb.db, "links", v)); }).then(function (s) {
+    loadFirebase().then(function (fb) { return fb.getDoc(fb.doc(fb.db, "links", v)); }).then(function (snap) {
       if (inp.value !== v) return;
-      slugOk = !s.exists(); setSt(inp, $("slugSt"), slugOk ? "ok" : "no", slugOk ? "Disponible ✓" : "Déjà pris"); refresh();
-    }).catch(function (e) { setSt(inp, $("slugSt"), "no", "Erreur"); toast(fbError(e), "err"); });
+      if (!snap.exists()) { slugOk = true; setSt(inp, $("slugSt"), "ok", "Disponible ✓", "✅ Ce nom est disponible"); }
+      else {
+        var d = snap.data(), rk = d.ownerRank || 0, by = d.ownerName || "un visiteur", mine = !!uid && d.ownerUid === uid;
+        if (mine) setSt(inp, $("slugSt"), "no", "Déjà à toi", "⚠️ Ce nom est déjà un de tes liens. Supprime-le d'abord dans « Mes liens ».");
+        else if (isAdmin || rankOf(d.guildId) > rk) {
+          slugOk = true; slugReplace = d;
+          setSt(inp, $("slugSt"), "ok", "Sera remplacé", "🔁 Ce nom est pris par " + by + " (" + RANK_LABEL[rk] + "). Tu as un rang supérieur : son lien sera supprimé et ce nom sera à toi.", "warn");
+        } else setSt(inp, $("slugSt"), "no", "Déjà pris", "❌ Ce nom est déjà pris par " + by + " (" + RANK_LABEL[rk] + ").");
+      }
+      refresh();
+    }).catch(function (e) { setSt(inp, $("slugSt"), "no", "Erreur", "❌ " + fbError(e)); });
   }, 350);
 }
 function parseInvite(v) {
@@ -623,16 +647,61 @@ function parseInvite(v) {
 }
 function onInvite() {
   var inp = $("invite"), v = inp.value;
-  if (!v.trim()) setSt(inp, $("invSt"), "", ""); else if (parseInvite(v)) setSt(inp, $("invSt"), "ok", "Format ✓"); else setSt(inp, $("invSt"), "no", "Invalide");
-  refresh();
+  inviteOk = false; clearTimeout(inviteTimer); refresh();
+  if (!v.trim()) return setSt(inp, $("invSt"), "", "");
+  var code = parseInvite(v);
+  if (!code) return setSt(inp, $("invSt"), "no", "Invalide", "❌ Format d'invitation invalide (exemple : discord.gg/abcdEF).");
+  setSt(inp, $("invSt"), "wait", "Vérification…", "⏳ Vérification de l'invitation…");
+  inviteTimer = setTimeout(function () { checkInvite(code, inp, v); }, 450);
 }
-function refresh() { $("btnCreate").disabled = !(slugOk && parseInvite($("invite").value)); }
+/* Vérifie l'invitation (Discord) puis cherche s'il existe déjà un lien pour ce serveur (Firestore) */
+function checkInvite(code, inp, v) {
+  var info = null, gid = null;
+  fetch(API + "/invites/" + code).then(function (r) {
+    if (r.status === 404) throw new Error("NOTFOUND");
+    return r.ok ? r.json() : null;
+  }, function () { return null; }).then(function (inv) {
+    info = inv; gid = inv && inv.guild && inv.guild.id;
+    if (inv && inv.expires_at) throw new Error("EXPIRES");
+    if (selected && gid && gid !== selected.id) throw new Error("OTHER:" + inv.guild.name);
+    return ensureUid();
+  }).then(function (u) {
+    uid = u;
+    var col = FB.collection(FB.db, "links");
+    return FB.getDocs(gid ? FB.query(col, FB.where("guildId", "==", gid)) : FB.query(col, FB.where("invite", "==", "https://discord.gg/" + code)));
+  }).then(function (snap) {
+    if (inp.value !== v) return;
+    var ex = snap.docs.map(function (d) { return d.data(); }), my = isAdmin ? 3 : rankOf(gid);
+    var blockers = ex.filter(function (l) { return l.ownerUid === uid || my <= (l.ownerRank || 0); });
+    var name = info && info.guild ? " pour « " + info.guild.name + " »" : "";
+    if (blockers.length) {
+      var b = blockers[0], mine = b.ownerUid === uid;
+      setSt(inp, $("invSt"), "no", "Déjà pris", "❌ Ce serveur a déjà un lien : " + HOST + "/" + b.slug + " (" + RANK_LABEL[b.ownerRank || 0] + (mine ? ", c'est le tien : supprime-le d'abord" : ", seul un rang supérieur peut le remplacer") + ").");
+    } else if (ex.length) {
+      inviteOk = true;
+      setSt(inp, $("invSt"), "ok", "Remplacera", "🔁 Ce serveur a déjà un lien (" + HOST + "/" + ex[0].slug + ") d'un rang inférieur : il sera supprimé automatiquement et remplacé par le tien.", "warn");
+    } else {
+      inviteOk = true;
+      setSt(inp, $("invSt"), "ok", "Disponible ✓", "✅ Invitation valide" + name + (my ? " · tu es " + RANK_LABEL[my > 2 ? 2 : my] : ""));
+    }
+    refresh();
+  }).catch(function (e) {
+    if (inp.value !== v) return;
+    var m = e && e.message || "";
+    if (m === "NOTFOUND") setSt(inp, $("invSt"), "no", "Introuvable", "❌ Cette invitation n'existe pas ou a expiré.");
+    else if (m === "EXPIRES") setSt(inp, $("invSt"), "no", "Expire", "❌ Cette invitation expire un jour. Crée-en une avec l'expiration « Jamais ».");
+    else if (m.indexOf("OTHER:") === 0) setSt(inp, $("invSt"), "no", "Autre serveur", "❌ Cette invitation mène vers « " + m.slice(6) + " », pas vers « " + selected.name + " ».");
+    else setSt(inp, $("invSt"), "no", "Erreur", "❌ " + fbError(e));
+  });
+}
+function refresh() { $("btnCreate").disabled = !(slugOk && inviteOk && parseInvite($("invite").value)); }
 function msg(t, k) { var e = $("formMsg"); e.className = "alert " + k; e.textContent = t; }
 
 /* ----- Création du lien ----- */
 function createLink() {
   var slug = $("slug").value, code = parseInvite($("invite").value);
-  if (!slugOk || !code) return;
+  if (!slugOk || !code || !inviteOk) return;
+  var replaced = !!slugReplace;
   if (demo) { confetti(); msg("🎮 Mode démo : voilà ce que ça donnerait → " + HOST + "/" + slug + ". Connecte-toi pour le créer pour de vrai !", "warn"); return; }
   $("btnCreate").disabled = true; msg("Vérification de l'invitation…", "warn");
   var note = "", info = null;
@@ -645,8 +714,8 @@ function createLink() {
     if (inv && inv.expires_at) throw new Error("Cette invitation expire un jour. Crée-en une avec l'expiration « Jamais ».");
   }, function (e) { if (e instanceof TypeError) note = " (invitation non vérifiée)"; else throw e; })
   .then(function () { return ensureUid(); })
-  .then(function (u) {
-    uid = u;
+  .then(function (u) { uid = u; return slugReplace ? replaceOld(slugReplace) : null; })
+  .then(function () {
     var g = selected || (info && info.guild) || {};
     var data = {
       slug: slug, invite: "https://discord.gg/" + code,
@@ -658,45 +727,105 @@ function createLink() {
       data.ownerDiscordId = session.user.id;
       data.ownerName = (session.user.global_name || session.user.username).slice(0, 100);
     }
-    return FB.setDoc(FB.doc(FB.db, "links", slug), data);
-  }).then(function () {
-    msg("✅ Ton lien est prêt : " + HOST + "/" + slug + note, "ok"); confetti();
+    var rank = data.guildId ? rankOf(data.guildId) : 0;
+    data.ownerRank = rank;
+    var pre = rank > 0 ? claimFor(data.guildId, rank) : Promise.resolve();
+    return pre.then(function () { return FB.setDoc(FB.doc(FB.db, "links", slug), data); })
+      .then(function () { return rank > 0 ? cleanup(data.guildId, rank, slug) : 0; });
+  }).then(function (removed) {
+    msg("✅ Ton lien est prêt : " + HOST + "/" + slug + note + (replaced ? " · l'ancien lien de ce nom a été remplacé" : "") + (removed ? " · " + removed + " lien(s) de rang inférieur supprimé(s) automatiquement" : ""), "ok"); confetti();
     copy(ORIGIN + "/" + slug, "Lien copié dans le presse-papiers ✓");
-    $("slug").value = ""; $("invite").value = ""; slugOk = false;
+    $("slug").value = ""; $("invite").value = ""; slugOk = false; inviteOk = false; slugReplace = null; slugAuto = true;
     setSt($("slug"), $("slugSt"), "", ""); setSt($("invite"), $("invSt"), "", ""); $("pvSlug").textContent = slug;
     loadMyLinks();
   }).catch(function (e) { msg(e.code ? fbError(e) : e.message, "err"); })
   .then(refresh);
 }
 
-/* ----- Mes liens ----- */
+/* ----- Mode admin (code secret vérifié par les règles Firestore) ----- */
+function adminLogin(ev) {
+  if (ev) ev.preventDefault();
+  var code = prompt("Code admin :"); if (!code) return;
+  ensureUid().then(function (u) { uid = u; return FB.setDoc(FB.doc(FB.db, "admins", uid), { code: code.trim() }); })
+    .then(function () {
+      isAdmin = true; toast("Mode admin activé ✓");
+      if ($("dash").classList.contains("hidden")) startFree(); else loadMyLinks();
+    })
+    .catch(function (e) { toast(e.code === "permission-denied" ? "Code incorrect, ou règles/code admin pas encore créés dans Firebase." : fbError(e), "err"); });
+}
+
+/* ----- Rangs : 2 = propriétaire, 1 = gestionnaire (Gérer le serveur / Admin), 0 = visiteur ----- */
+var RANK_LABEL = ["👤 Visiteur", "🛠️ Gestionnaire", "👑 Propriétaire"];
+function rankOf(gid) {
+  if (!session || !gid) return 0;
+  for (var i = 0; i < session.guilds.length; i++) if (session.guilds[i].id === gid) return session.guilds[i].owner ? 2 : 1;
+  return 0;
+}
+function claimFor(gid, rank) { return FB.setDoc(FB.doc(FB.db, "claims", uid + "_" + gid), { uid: uid, guildId: gid, rank: rank }); }
+function replaceOld(old) {
+  var r = rankOf(old.guildId);
+  var pre = (!isAdmin && r > 0 && old.guildId) ? claimFor(old.guildId, r) : Promise.resolve();
+  return pre.then(function () { return FB.deleteDoc(FB.doc(FB.db, "links", old.slug)); });
+}
+function cleanup(gid, rank, keep) {
+  return FB.getDocs(FB.query(FB.collection(FB.db, "links"), FB.where("guildId", "==", gid))).then(function (snap) {
+    var dels = snap.docs.filter(function (d) { return d.id !== keep && (d.data().ownerRank || 0) < rank; })
+      .map(function (d) { return FB.deleteDoc(d.ref); });
+    return Promise.all(dels).then(function () { return dels.length; });
+  }).catch(function () { return 0; });
+}
+function chunk(a, n) { var r = []; for (var i = 0; i < a.length; i += n) r.push(a.slice(i, i + n)); return r; }
+
+/* ----- Mes liens (+ liens de mes serveurs si connecté avec Discord) ----- */
 function loadMyLinks() {
   var box = $("myLinks");
   if (!box.querySelector(".lk")) {
     $("cnt").textContent = "…"; box.textContent = "";
     var ld = document.createElement("div"); ld.className = "empty"; ld.textContent = "⏳ Chargement de tes liens…"; box.appendChild(ld);
   }
-  ensureUid().then(function (u) { uid = u; return FB.getDocs(FB.query(FB.collection(FB.db, "links"), FB.where("ownerUid", "==", uid))); }).then(function (snap) {
-    var list = snap.docs.map(function (d) { return d.data(); }).sort(function (a, b) { return ((b.createdAt && b.createdAt.seconds) || 9e9) - ((a.createdAt && a.createdAt.seconds) || 9e9); });
+  ensureUid().then(function (u) {
+    uid = u;
+    return FB.getDoc(FB.doc(FB.db, "admins", uid)).then(function (a) { isAdmin = a.exists(); }, function () { isAdmin = false; });
+  }).then(function () {
+    var col = FB.collection(FB.db, "links");
+    if (isAdmin) return Promise.all([FB.getDocs(col)]);
+    var qs = [FB.getDocs(FB.query(col, FB.where("ownerUid", "==", uid)))];
+    if (session) chunk(session.guilds.map(function (g) { return g.id; }), 30).forEach(function (ids) {
+      qs.push(FB.getDocs(FB.query(col, FB.where("guildId", "in", ids))));
+    });
+    return Promise.all(qs);
+  }).then(function (snaps) {
+    var map = {};
+    snaps.forEach(function (sn) { sn.docs.forEach(function (d) { map[d.id] = d.data(); }); });
+    var list = Object.keys(map).map(function (k) { return map[k]; }).sort(function (a, b) { return ((b.createdAt && b.createdAt.seconds) || 9e9) - ((a.createdAt && a.createdAt.seconds) || 9e9); });
+    document.querySelector(".sec h2").textContent = isAdmin ? "🔐 Tous les liens (admin)" : session ? "Mes liens & ceux de mes serveurs" : "Mes liens";
     $("cnt").textContent = list.length; box.textContent = "";
-    if (!list.length) { var e = document.createElement("div"); e.className = "empty"; e.textContent = "Tu n'as pas encore de lien. Crée le premier juste au-dessus ✨"; box.appendChild(e); return; }
+    if (!list.length) { var e = document.createElement("div"); e.className = "empty"; e.textContent = session ? "Aucun lien pour toi ni pour tes serveurs pour l'instant ✨" : "Tu n'as pas encore de lien. Crée le premier juste au-dessus ✨"; box.appendChild(e); return; }
     list.forEach(function (l) {
+      var mine = l.ownerUid === uid, lr = l.ownerRank || 0, mr = rankOf(l.guildId), canDel = mine || isAdmin || mr > lr;
       var c = document.createElement("div"); c.className = "lk";
       var top = document.createElement("div"); top.className = "lk-top";
       var t = document.createElement("div"); t.style.minWidth = 0;
       var a = document.createElement("a"); a.href = ORIGIN + "/" + l.slug; a.target = "_blank"; a.rel = "noopener"; a.textContent = HOST + "/" + l.slug;
-      var s = document.createElement("small"); s.textContent = l.guildName;
-      t.appendChild(a); t.appendChild(s); top.appendChild(iconNode("gi", l.guildId, l.guildIcon, l.guildName)); top.appendChild(t);
+      var sm = document.createElement("small");
+      sm.textContent = l.guildName + " · " + RANK_LABEL[lr] + (mine ? " · à toi" : " · par " + (l.ownerName || "un visiteur"));
+      t.appendChild(a); t.appendChild(sm); top.appendChild(iconNode("gi", l.guildId, l.guildIcon, l.guildName)); top.appendChild(t);
       var act = document.createElement("div"); act.className = "lk-act";
       var cp = document.createElement("button"); cp.className = "btn glass sm"; cp.textContent = "📋 Copier"; cp.onclick = function () { copy(ORIGIN + "/" + l.slug, "Lien copié ✓"); };
-      var del = document.createElement("button"); del.className = "btn red sm"; del.textContent = "🗑️ Supprimer";
-      del.onclick = function () {
-        if (!confirm("Supprimer définitivement " + HOST + "/" + l.slug + " ?")) return;
-        FB.deleteDoc(FB.doc(FB.db, "links", l.slug)).then(function () { toast("Lien supprimé"); loadMyLinks(); onSlug(); }).catch(function (e) { toast(fbError(e), "err"); });
-      };
-      act.appendChild(cp); act.appendChild(del); c.appendChild(top); c.appendChild(act); box.appendChild(c);
+      act.appendChild(cp);
+      if (canDel) {
+        var del = document.createElement("button"); del.className = "btn red sm"; del.textContent = "🗑️ Supprimer";
+        del.onclick = function () {
+          if (!confirm((mine ? "Supprimer définitivement " : isAdmin ? "ADMIN – supprimer le lien de quelqu'un d'autre : " : "Supprimer le lien d'une autre personne sur ton serveur : ") + HOST + "/" + l.slug + " ?")) return;
+          var pre = (!mine && !isAdmin && mr > 0) ? claimFor(l.guildId, mr) : Promise.resolve();
+          pre.then(function () { return FB.deleteDoc(FB.doc(FB.db, "links", l.slug)); })
+            .then(function () { toast("Lien supprimé"); loadMyLinks(); onSlug(); }).catch(function (e) { toast(fbError(e), "err"); });
+        };
+        act.appendChild(del);
+      }
+      c.appendChild(top); c.appendChild(act); box.appendChild(c);
     });
-  }).catch(function (e) { box.textContent = ""; var er = document.createElement("div"); er.className = "alert err"; er.textContent = fbError(e); box.appendChild(er); });
+  }).catch(function (e) { box.textContent = ""; $("cnt").textContent = "0"; var er = document.createElement("div"); er.className = "alert err"; er.textContent = fbError(e); box.appendChild(er); });
 }
 
 /* ----- Animation de frappe ----- */

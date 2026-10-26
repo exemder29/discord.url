@@ -9,17 +9,35 @@ service cloud.firestore {
                    'about', 'terms', 'privacy', 'help', 'support', 'discord', 'static']);
     }
 
+    // Rang déclaré par l'utilisateur pour un serveur : 0 = visiteur, 1 = gestionnaire, 2 = propriétaire
+    function claimRank(g) {
+      return exists(/databases/$(database)/documents/claims/$(request.auth.uid + '_' + g))
+        ? get(/databases/$(database)/documents/claims/$(request.auth.uid + '_' + g)).data.rank
+        : 0;
+    }
+
+    // Rang déclaré (connexion Discord) : un document par utilisateur et par serveur
+    match /claims/{id} {
+      allow create, update: if request.auth != null
+        && request.resource.data.keys().hasOnly(['uid', 'guildId', 'rank'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.guildId is string
+        && request.resource.data.guildId.matches('^[0-9]{15,22}$')
+        && id == request.auth.uid + '_' + request.resource.data.guildId
+        && request.resource.data.rank in [1, 2];
+    }
+
     match /links/{slug} {
       // Lecture d'un lien précis : publique (nécessaire pour la redirection des visiteurs)
       allow get: if true;
 
-      // Lister : uniquement ses propres liens (requête where ownerUid == mon uid)
-      allow list: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+      // Lister : utilisateur connecté (liens à moi + liens de mes serveurs)
+      allow list: if request.auth != null;
 
-      // Création : connecté (anonyme suffit), n'importe quel serveur, slug valide et libre (create échoue si le document existe déjà)
+      // Création : connecté (anonyme suffit), n'importe quel serveur, slug valide et libre
       allow create: if request.auth != null
         && validSlug(slug)
-        && request.resource.data.keys().hasOnly(['slug', 'invite', 'guildId', 'guildName', 'guildIcon', 'ownerUid', 'ownerDiscordId', 'ownerName', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['slug', 'invite', 'guildId', 'guildName', 'guildIcon', 'ownerUid', 'ownerDiscordId', 'ownerName', 'ownerRank', 'createdAt'])
         && request.resource.data.keys().hasAll(['slug', 'invite', 'guildName', 'ownerUid', 'createdAt'])
         && request.resource.data.slug == slug
         && request.resource.data.ownerUid == request.auth.uid
@@ -35,13 +53,20 @@ service cloud.firestore {
         && (!('guildIcon' in request.resource.data) || request.resource.data.guildIcon == null
             || (request.resource.data.guildIcon is string && request.resource.data.guildIcon.size() <= 64))
         && (!('ownerName' in request.resource.data) || (request.resource.data.ownerName is string && request.resource.data.ownerName.size() <= 100))
+        && (!('ownerRank' in request.resource.data)
+            || (request.resource.data.ownerRank in [0, 1, 2]
+                && (request.resource.data.ownerRank == 0
+                    || ('guildId' in request.resource.data
+                        && claimRank(request.resource.data.guildId) >= request.resource.data.ownerRank))))
         && request.resource.data.createdAt == request.time;
 
       // Pas de modification : on supprime puis on recrée
       allow update: if false;
 
-      // Suppression : uniquement par le créateur
-      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+      // Suppression : le créateur, ou quelqu'un de rang supérieur sur ce serveur
+      allow delete: if request.auth != null
+        && (resource.data.ownerUid == request.auth.uid
+            || claimRank(resource.data.get('guildId', '')) > resource.data.get('ownerRank', 0));
     }
 
     // Tout le reste est interdit
