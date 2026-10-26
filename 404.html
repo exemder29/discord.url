@@ -290,7 +290,7 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
       </aside>
     </div>
 
-    <div class="sec"><h2>Mes liens</h2><span class="cnt" id="cnt">0</span></div>
+    <div class="sec"><h2>Mes liens</h2><span class="cnt" id="cnt">…</span></div>
     <div id="myLinks" class="links"></div>
   </main>
 
@@ -420,8 +420,14 @@ function fbError(e) {
 }
 function ensureUid() {
   return loadFirebase().then(function (fb) {
-    if (fb.auth.currentUser) return fb.auth.currentUser.uid;
-    return fb.signInAnonymously(fb.auth).then(function (c) { return c.user.uid; });
+    /* On attend que Firebase ait restauré la session enregistrée (plus lent sur téléphone),
+       sinon on créerait un NOUVEAU compte anonyme et « Mes liens » apparaîtrait vide. */
+    var ready = fb.auth.authStateReady ? fb.auth.authStateReady()
+      : new Promise(function (res) { var off = fb.onAuthStateChanged(fb.auth, function () { off(); res(); }); });
+    return ready.then(function () {
+      if (fb.auth.currentUser) return fb.auth.currentUser.uid;
+      return fb.signInAnonymously(fb.auth).then(function (c) { return c.user.uid; });
+    });
   });
 }
 
@@ -465,6 +471,7 @@ function runApp() {
   $("exHost").textContent = HOST; $("ruri").textContent = REDIRECT_URI;
   $("cpRuri").onclick = function () { copy(REDIRECT_URI, "Adresse copiée ✓"); };
   typing();
+  loadFirebase().then(function (fb) { return fb.auth.authStateReady ? fb.auth.authStateReady() : null; }).catch(function () {});
   if (isFile) { loginError("Tu as ouvert le fichier directement. Ouvre plutôt ton site Firebase (https://" + "url-discord-generator.web.app) : la connexion Discord ne marche que depuis une vraie adresse."); $("help").open = true; }
 
   $("btnLogin").onclick = login;
@@ -544,7 +551,7 @@ function startFree() {
   demo = false; session = null; selected = null;
   $("hello").textContent = "toi"; show($("navUser"), false); show($("home"), false); show($("dash")); show($("guildHelp")); show($("noGuild"), false);
   $("guilds").textContent = "";
-  ensureUid().then(function (u) { uid = u; loadMyLinks(); }).catch(function (e) { msg(fbError(e), "err"); });
+  loadMyLinks();
 }
 
 function startDemo() {
@@ -665,7 +672,11 @@ function createLink() {
 /* ----- Mes liens ----- */
 function loadMyLinks() {
   var box = $("myLinks");
-  loadFirebase().then(function (fb) { return fb.getDocs(fb.query(fb.collection(fb.db, "links"), fb.where("ownerUid", "==", uid))); }).then(function (snap) {
+  if (!box.querySelector(".lk")) {
+    $("cnt").textContent = "…"; box.textContent = "";
+    var ld = document.createElement("div"); ld.className = "empty"; ld.textContent = "⏳ Chargement de tes liens…"; box.appendChild(ld);
+  }
+  ensureUid().then(function (u) { uid = u; return FB.getDocs(FB.query(FB.collection(FB.db, "links"), FB.where("ownerUid", "==", uid))); }).then(function (snap) {
     var list = snap.docs.map(function (d) { return d.data(); }).sort(function (a, b) { return ((b.createdAt && b.createdAt.seconds) || 9e9) - ((a.createdAt && a.createdAt.seconds) || 9e9); });
     $("cnt").textContent = list.length; box.textContent = "";
     if (!list.length) { var e = document.createElement("div"); e.className = "empty"; e.textContent = "Tu n'as pas encore de lien. Crée le premier juste au-dessus ✨"; box.appendChild(e); return; }
