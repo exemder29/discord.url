@@ -54,7 +54,7 @@ service cloud.firestore {
       // Création : connecté (anonyme suffit), n'importe quel serveur, slug valide et libre
       allow create: if request.auth != null
         && validSlug(slug)
-        && request.resource.data.keys().hasOnly(['slug', 'invite', 'guildId', 'guildName', 'guildIcon', 'ownerUid', 'ownerDiscordId', 'ownerName', 'ownerRank', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['slug', 'invite', 'guildId', 'guildName', 'guildIcon', 'ownerUid', 'ownerDiscordId', 'ownerName', 'ownerRank', 'expireAt', 'createdAt'])
         && request.resource.data.keys().hasAll(['slug', 'invite', 'guildName', 'ownerUid', 'createdAt'])
         && request.resource.data.slug == slug
         && request.resource.data.ownerUid == request.auth.uid
@@ -75,6 +75,13 @@ service cloud.firestore {
                 && (request.resource.data.ownerRank == 0
                     || ('guildId' in request.resource.data
                         && claimRank(request.resource.data.guildId) >= request.resource.data.ownerRank))))
+        // Sans connexion Discord : le lien expire (7 jours, 10 max). Avec connexion Discord : pas d'expiration.
+        && (('ownerDiscordId' in request.resource.data)
+            ? !('expireAt' in request.resource.data)
+            : ('expireAt' in request.resource.data
+               && request.resource.data.expireAt is timestamp
+               && request.resource.data.expireAt > request.time
+               && request.resource.data.expireAt <= request.time + duration.value(10, 'd')))
         && request.resource.data.createdAt == request.time;
 
       // Pas de modification : on supprime puis on recrée
@@ -84,6 +91,7 @@ service cloud.firestore {
       allow delete: if request.auth != null
         && (resource.data.ownerUid == request.auth.uid
             || isAdmin()
+            || (resource.data.get('expireAt', null) != null && resource.data.expireAt < request.time)   // lien expiré : n'importe qui peut le nettoyer
             || claimRank(resource.data.get('guildId', '')) > resource.data.get('ownerRank', 0));
     }
 
