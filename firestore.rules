@@ -26,6 +26,7 @@ service cloud.firestore {
 
     match /admins/{uid} {
       allow get: if request.auth != null && request.auth.uid == uid;
+      allow delete: if request.auth != null && request.auth.uid == uid;   // quitter le mode admin
       allow create, update: if request.auth != null && request.auth.uid == uid
         && request.resource.data.keys().hasOnly(['code'])
         && request.resource.data.code is string

@@ -299,6 +299,34 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
     <div id="myLinks" class="links"></div>
   </main>
 
+  <main id="adminView" class="hidden">
+    <div class="dash-head">
+      <h1>🔐 Espace <span class="rainbow">admin</span></h1>
+      <p class="mut" style="font-weight:700;font-size:18px">Gère tous les liens du site.</p>
+    </div>
+    <section class="panel" id="adLock" style="max-width:520px;margin:0 auto 22px">
+      <div class="ptitle"><h2>Code admin</h2></div>
+      <div class="field"><span style="opacity:.7">🔑</span><input id="adCode" type="password" placeholder="Entre ton code secret" autocomplete="off"></div>
+      <div id="adErr" class="fmsg no"></div>
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+        <button id="adGo" class="btn">🔓 Entrer</button>
+        <button class="btn glass sm adBack">← Retour au site</button>
+      </div>
+    </section>
+    <div id="adPanel" class="hidden">
+      <section class="panel">
+        <div class="field"><span style="opacity:.7">🔎</span><input id="adSearch" placeholder="Rechercher un nom de lien…" autocomplete="off"></div>
+        <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+          <button id="adRefresh" class="btn glass sm">🔄 Actualiser</button>
+          <button class="btn glass sm adBack">← Retour au site</button>
+          <button id="adQuit" class="btn red sm">🚪 Quitter le mode admin</button>
+        </div>
+      </section>
+      <div class="sec"><h2>Tous les liens</h2><span class="cnt" id="adCount">…</span></div>
+      <div id="adList" class="links"></div>
+    </div>
+  </main>
+
   <div class="foot">Fait avec 💜 · Non affilié à Discord Inc. · <a href="#" id="btnAdmin" style="color:#fff">🔐 Admin</a></div>
 </div>
 
@@ -449,7 +477,7 @@ var isFile = location.protocol === "file:";
    affiche simplement l'accueil au lieu d'une fausse « Erreur 404 ». */
 var isSlugPath = !isFile && SLUG_RE.test(path) && RESERVED.indexOf(path) < 0;
 if (isSlugPath) { show($("redirect")); runRedirect(path); }
-else { show($("app")); runApp(); }
+else { show($("app")); runApp(); if (path === "admin" || location.hash === "#admin") openAdmin(); }
 
 function runRedirect(slug) {
   loadFirebase().then(function (fb) { return fb.getDoc(fb.doc(fb.db, "links", slug)); }).then(function (snap) {
@@ -482,7 +510,10 @@ function runApp() {
   $("btnLogin").onclick = login;
   $("btnFree").onclick = startFree; $("btnLogin2").onclick = login;
   $("btnOut").onclick = function () { sessionStorage.removeItem("dc_session"); if (FB) FB.auth.signOut().catch(function () {}); location.href = REDIRECT_URI; };
-  $("btnCreate").onclick = createLink; $("btnAdmin").onclick = adminLogin;
+  $("btnCreate").onclick = createLink; $("btnAdmin").onclick = openAdmin;
+  $("adGo").onclick = adminUnlock; $("adCode").addEventListener("keydown", function (e) { if (e.key === "Enter") adminUnlock(); });
+  $("adSearch").addEventListener("input", adminRender); $("adRefresh").onclick = adminLoad; $("adQuit").onclick = adminQuit;
+  Array.prototype.forEach.call(document.querySelectorAll(".adBack"), function (b) { b.onclick = function () { location.href = REDIRECT_URI; }; });
   $("slug").addEventListener("input", function () { slugAuto = false; onSlug(); });
   $("invite").addEventListener("input", onInvite);
 
@@ -571,7 +602,7 @@ function openDash() {
   var u = session.user, name = u.global_name || u.username;
   $("uName").textContent = name; $("hello").textContent = name;
   $("uAv").src = u.avatar ? "https://cdn.discordapp.com/avatars/" + u.id + "/" + u.avatar + ".png?size=64" : "https://cdn.discordapp.com/embed/avatars/0.png";
-  show($("navUser")); show($("home"), false); show($("dash")); show($("guildHelp"), false);
+  show($("navUser")); show($("home"), false); show($("dash"), !adminOn()); show($("guildHelp"), false);
   var ow = session.guilds.filter(function (g) { return g.owner; }).length;
   $("rankInfo").textContent = "Connecté avec Discord · 👑 propriétaire de " + ow + " serveur(s) · 🛠️ gestionnaire de " + (session.guilds.length - ow) + " serveur(s)"; show($("rankInfo"));
   document.querySelector(".sec h2").textContent = "Mes liens & ceux de mes serveurs";
@@ -742,16 +773,68 @@ function createLink() {
   .then(refresh);
 }
 
-/* ----- Mode admin (code secret vérifié par les règles Firestore) ----- */
-function adminLogin(ev) {
-  if (ev) ev.preventDefault();
-  var code = prompt("Code admin :"); if (!code) return;
-  ensureUid().then(function (u) { uid = u; return FB.setDoc(FB.doc(FB.db, "admins", uid), { code: code.trim() }); })
-    .then(function () {
-      isAdmin = true; toast("Mode admin activé ✓");
-      if ($("dash").classList.contains("hidden")) startFree(); else loadMyLinks();
-    })
-    .catch(function (e) { toast(e.code === "permission-denied" ? "Code incorrect, ou règles/code admin pas encore créés dans Firebase." : fbError(e), "err"); });
+/* ----- Espace admin (code secret vérifié par les règles Firestore) ----- */
+var adAll = [];
+function adminOn() { return !$("adminView").classList.contains("hidden"); }
+function openAdmin(ev) {
+  if (ev && ev.preventDefault) ev.preventDefault();
+  show($("home"), false); show($("dash"), false); show($("adminView"));
+  show($("adLock")); show($("adPanel"), false); $("adErr").textContent = ""; window.scrollTo(0, 0);
+  ensureUid().then(function (u) {
+    uid = u;
+    return FB.getDoc(FB.doc(FB.db, "admins", uid)).then(function (d) { isAdmin = d.exists(); }, function () { isAdmin = false; });
+  }).then(function () { if (isAdmin) adminShow(); else $("adCode").focus(); })
+    .catch(function (e) { $("adErr").textContent = "❌ " + fbError(e); });
+}
+function adminUnlock() {
+  var code = $("adCode").value.trim();
+  if (!code) { $("adErr").textContent = "Entre ton code."; return; }
+  $("adGo").disabled = true; $("adErr").textContent = "";
+  ensureUid().then(function (u) { uid = u; return FB.setDoc(FB.doc(FB.db, "admins", uid), { code: code }); })
+    .then(function () { isAdmin = true; $("adCode").value = ""; adminShow(); })
+    .catch(function (e) { $("adErr").textContent = e.code === "permission-denied" ? "❌ Code incorrect (ou règles Firestore / document config/admin manquants)." : "❌ " + fbError(e); })
+    .then(function () { $("adGo").disabled = false; });
+}
+function adminQuit() {
+  FB.deleteDoc(FB.doc(FB.db, "admins", uid)).then(function () {
+    isAdmin = false; adAll = []; location.href = REDIRECT_URI;
+  }).catch(function (e) { toast(e.code === "permission-denied" ? "Impossible de quitter : publie les nouvelles règles Firestore." : fbError(e), "err"); });
+}
+function adminShow() { show($("adLock"), false); show($("adPanel")); adminLoad(); }
+function adminLoad() {
+  $("adCount").textContent = "…"; $("adList").textContent = "";
+  var ld = document.createElement("div"); ld.className = "empty"; ld.textContent = "⏳ Chargement des liens…"; $("adList").appendChild(ld);
+  FB.getDocs(FB.collection(FB.db, "links")).then(function (snap) {
+    adAll = snap.docs.map(function (d) { return d.data(); }).sort(function (x, y) { return ((y.createdAt && y.createdAt.seconds) || 9e9) - ((x.createdAt && x.createdAt.seconds) || 9e9); });
+    adminRender();
+  }).catch(function (e) { $("adList").textContent = ""; var er = document.createElement("div"); er.className = "alert err"; er.textContent = fbError(e); $("adList").appendChild(er); });
+}
+function adminRender() {
+  var q = $("adSearch").value.trim().toLowerCase().replace(/\s+/g, "-");
+  var list = adAll.filter(function (l) { return !q || String(l.slug).indexOf(q) >= 0; });
+  $("adCount").textContent = q ? list.length + " / " + adAll.length : adAll.length;
+  var box = $("adList"); box.textContent = "";
+  if (!list.length) { var e = document.createElement("div"); e.className = "empty"; e.textContent = q ? "Aucun lien ne contient « " + q + " »." : "Aucun lien pour l'instant."; box.appendChild(e); return; }
+  list.forEach(function (l) {
+    var c = document.createElement("div"); c.className = "lk";
+    var top = document.createElement("div"); top.className = "lk-top";
+    var t = document.createElement("div"); t.style.minWidth = 0;
+    var a = document.createElement("a"); a.href = ORIGIN + "/" + l.slug; a.target = "_blank"; a.rel = "noopener"; a.textContent = HOST + "/" + l.slug;
+    var sm = document.createElement("small");
+    var dt = l.createdAt && l.createdAt.seconds ? " · " + new Date(l.createdAt.seconds * 1000).toLocaleDateString("fr-FR") : "";
+    sm.textContent = l.guildName + " · " + RANK_LABEL[l.ownerRank || 0] + " · par " + (l.ownerName || "un visiteur") + dt;
+    t.appendChild(a); t.appendChild(sm); top.appendChild(iconNode("gi", l.guildId, l.guildIcon, l.guildName)); top.appendChild(t);
+    var act = document.createElement("div"); act.className = "lk-act";
+    var cp = document.createElement("button"); cp.className = "btn glass sm"; cp.textContent = "📋 Copier"; cp.onclick = function () { copy(ORIGIN + "/" + l.slug, "Lien copié ✓"); };
+    var del = document.createElement("button"); del.className = "btn red sm"; del.textContent = "🗑️ Supprimer";
+    del.onclick = function () {
+      if (!confirm("ADMIN – supprimer définitivement " + HOST + "/" + l.slug + " ?")) return;
+      FB.deleteDoc(FB.doc(FB.db, "links", l.slug)).then(function () {
+        adAll = adAll.filter(function (x) { return x.slug !== l.slug; }); toast("Lien supprimé"); adminRender();
+      }).catch(function (e) { toast(fbError(e), "err"); });
+    };
+    act.appendChild(cp); act.appendChild(del); c.appendChild(top); c.appendChild(act); box.appendChild(c);
+  });
 }
 
 /* ----- Rangs : 2 = propriétaire, 1 = gestionnaire (Gérer le serveur / Admin), 0 = visiteur ----- */
@@ -788,7 +871,6 @@ function loadMyLinks() {
     return FB.getDoc(FB.doc(FB.db, "admins", uid)).then(function (a) { isAdmin = a.exists(); }, function () { isAdmin = false; });
   }).then(function () {
     var col = FB.collection(FB.db, "links");
-    if (isAdmin) return Promise.all([FB.getDocs(col)]);
     var qs = [FB.getDocs(FB.query(col, FB.where("ownerUid", "==", uid)))];
     if (session) chunk(session.guilds.map(function (g) { return g.id; }), 30).forEach(function (ids) {
       qs.push(FB.getDocs(FB.query(col, FB.where("guildId", "in", ids))));
@@ -798,7 +880,7 @@ function loadMyLinks() {
     var map = {};
     snaps.forEach(function (sn) { sn.docs.forEach(function (d) { map[d.id] = d.data(); }); });
     var list = Object.keys(map).map(function (k) { return map[k]; }).sort(function (a, b) { return ((b.createdAt && b.createdAt.seconds) || 9e9) - ((a.createdAt && a.createdAt.seconds) || 9e9); });
-    document.querySelector(".sec h2").textContent = isAdmin ? "🔐 Tous les liens (admin)" : session ? "Mes liens & ceux de mes serveurs" : "Mes liens";
+    document.querySelector(".sec h2").textContent = session ? "Mes liens & ceux de mes serveurs" : "Mes liens";
     $("cnt").textContent = list.length; box.textContent = "";
     if (!list.length) { var e = document.createElement("div"); e.className = "empty"; e.textContent = session ? "Aucun lien pour toi ni pour tes serveurs pour l'instant ✨" : "Tu n'as pas encore de lien. Crée le premier juste au-dessus ✨"; box.appendChild(e); return; }
     list.forEach(function (l) {
