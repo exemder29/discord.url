@@ -156,11 +156,53 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
 .lk .gi{width:48px;height:48px;border-radius:16px;font-size:18px;flex:none}
 .lk a{color:#fff176;font:800 16px ui-monospace,Menlo,monospace;text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lk small{opacity:.85;font-weight:700}
-.lk-act{display:flex;gap:10px}.lk-act .btn{flex:1}
+.lk-act{display:flex;gap:10px}.lk-act .btn{flex:1;white-space:nowrap}
 .empty{grid-column:1/-1;text-align:center;padding:36px 20px;border:3px dashed rgba(255,255,255,.45);border-radius:24px;font-weight:700}
 .sec{display:flex;align-items:center;gap:12px;margin:34px 0 16px}
 .sec h2{font-size:30px;font-weight:800}
 .cnt{background:#fff;color:#7b2ff7;font:800 16px "Baloo 2",sans-serif;padding:2px 14px;border-radius:999px;box-shadow:0 3px 0 rgba(0,0,0,.2)}
+
+/* ---- navigation ---- */
+.nav{flex-wrap:wrap;gap:10px}
+.topnav{display:flex;gap:8px;flex-wrap:wrap}
+.tn{color:#fff;text-decoration:none;font:800 16px "Baloo 2",Nunito,sans-serif;padding:8px 16px;border-radius:999px;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.3);transition:background .15s,transform .15s}
+.tn:hover{background:rgba(255,255,255,.3);transform:translateY(-2px)}
+.tn.on{background:#fff;color:#5b2fd6}
+
+/* ---- notifications ---- */
+.nf{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:rgba(255,190,30,.28);border:2px solid rgba(255,255,255,.4);font-weight:700;margin-bottom:10px;animation:pop .35s both}
+.nf .nf-i{font-size:26px;flex:none}
+.nf p{flex:1;min-width:0;font-size:15px;word-break:break-word}
+
+/* ---- annuaire de serveurs ---- */
+.sv-bar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.sv-bar .field{flex:1;min-width:220px}
+.cats{display:flex;gap:8px;flex-wrap:wrap}
+.cat{cursor:pointer;border:2px solid rgba(255,255,255,.35);background:rgba(255,255,255,.14);color:#fff;font:800 14px Nunito,sans-serif;padding:6px 14px;border-radius:999px;transition:background .15s,transform .15s}
+.cat:hover{background:rgba(255,255,255,.3);transform:translateY(-2px)}
+.cat.on{background:#fff;color:#5b2fd6;border-color:#fff}
+.field textarea{flex:1;min-width:0;background:transparent;border:0;outline:0;color:#fff;font:700 16px Nunito,sans-serif;padding:15px 4px;resize:vertical;min-height:110px}
+.field textarea::placeholder{color:rgba(255,255,255,.45)}
+.field select{flex:1;min-width:0;background:transparent;border:0;outline:0;color:#fff;font:700 17px Nunito,sans-serif;padding:15px 4px;cursor:pointer}
+.field select option{color:#232550}
+.svprev{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.16)}
+.svprev .gi{width:48px;height:48px;border-radius:16px;font-size:18px;flex:none}
+.svprev b{display:block;font-size:17px}
+.sv-name{font:800 18px "Baloo 2",Nunito,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sv-desc{font-weight:600;font-size:15px;opacity:.95;word-break:break-word;white-space:pre-line}
+.svtiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+.svtile{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 12px 14px;border-radius:22px;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.3);color:#fff;text-decoration:none;text-align:center;box-shadow:0 6px 0 rgba(0,0,0,.14);transition:transform .18s,background .18s;animation:pop .4s both}
+.svtile:hover{transform:translateY(-6px) rotate(-1.5deg);background:rgba(255,255,255,.3)}
+.svtile .sv-name{max-width:100%}
+.svtile small{font-weight:700;opacity:.9}
+.svhero{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.svhero .gi{width:110px;height:110px;border-radius:34px;font-size:40px}
+.svhero h1{font-size:clamp(28px,5vw,44px);font-weight:800;word-break:break-word}
+.svdesc{margin-top:8px;font-size:17px;font-weight:600;white-space:pre-line;word-break:break-word}
+.svinfo{display:grid;gap:8px;margin-top:22px;font-weight:700}
+.svback{margin-bottom:18px}
+.lk a.btn{color:#fff;font:800 15px "Baloo 2",Nunito,sans-serif;display:inline-flex;overflow:visible}
+.svbadge{display:inline-block;font-size:12px;font-weight:800;padding:2px 10px;border-radius:999px;background:#fff;color:#5b2fd6;margin-right:6px}
 
 /* ---- redirection ---- */
 #redirect{position:relative;z-index:1;min-height:100vh;display:grid;place-items:center;padding:20px}
@@ -205,6 +247,10 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
 <div id="app" class="hidden">
   <header class="nav">
     <a class="brand" href="/"><i>🔗</i> DiscordLink</a>
+    <nav class="topnav">
+      <a class="tn on" id="navLinks" href="/">🔗 Liens</a>
+      <a class="tn" id="navServers" href="/serveurs">🌐 Serveurs</a>
+    </nav>
     <div id="navUser" class="chip hidden">
       <img id="uAv" alt=""><span id="uName"></span>
       <button id="btnOut" title="Déconnexion" aria-label="Déconnexion">⏻</button>
@@ -225,6 +271,7 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
         <svg viewBox="0 0 24 24" width="24" height="24" fill="#fff"><path d="M20.317 4.37a19.79 19.79 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.74 19.74 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.1 13.1 0 01-1.872-.892.077.077 0 01-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 01.078-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.079.009c.12.099.246.198.373.292a.077.077 0 01-.006.127 12.3 12.3 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.84 19.84 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
         Se connecter avec Discord (facultatif)
       </button>
+      <button id="btnServers" class="btn glass">🌐 Découvrir les serveurs</button>
       <div id="loginErr" class="alert err hidden"></div>
     </div>
 
@@ -255,6 +302,11 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
       <p id="rankInfo" class="mut hidden" style="font-weight:800;margin-top:10px"></p>
       <div id="demoTag" class="alert warn hidden" style="margin:16px auto 0">🎮 Mode démo : tu peux tout essayer, mais rien n'est enregistré. <a href="/" style="color:#fff">Se connecter</a></div>
     </div>
+
+    <section class="panel hidden" id="notifs">
+      <div class="ptitle"><h2>🔔 Notifications</h2><button id="nfClear" class="btn glass sm hidden" style="margin-left:auto">Tout effacer</button></div>
+      <div id="notifList"></div>
+    </section>
 
     <div class="layout">
       <div>
@@ -330,6 +382,71 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
     </div>
   </main>
 
+  <!-- Annuaire de serveurs : liste (/serveurs) -->
+  <main id="serversView" class="hidden">
+    <div class="dash-head">
+      <h1>🌐 <span class="rainbow">Serveurs</span></h1>
+      <p class="mut" style="font-weight:700;font-size:18px">Les serveurs Discord de la communauté. Clique sur un serveur pour voir sa description.</p>
+    </div>
+    <div class="sv-bar">
+      <div class="field"><span style="opacity:.7">🔎</span><input id="svSearch" placeholder="Rechercher un serveur…" autocomplete="off"></div>
+      <button id="svAdd" class="btn green">➕ Ajouter mon serveur</button>
+      <button id="btnLogin3" class="btn glass sm">Se connecter avec Discord</button>
+    </div>
+    <div id="svCats" class="cats"></div>
+    <div class="sec"><h2>Tous les serveurs</h2><span class="cnt" id="svCnt">…</span></div>
+    <div id="svList" class="svtiles"></div>
+  </main>
+
+  <!-- Annuaire : page d'un serveur (/serveurs/ID) -->
+  <main id="svDetail" class="hidden">
+    <a class="btn glass sm svback svBack" href="/serveurs">← Retour aux serveurs</a>
+    <section class="panel" id="svDetBox"></section>
+  </main>
+
+  <!-- Annuaire : page « Ajouter mon serveur » (/serveurs/ajouter) -->
+  <main id="svAddView" class="hidden">
+    <div class="dash-head">
+      <h1>➕ Ajouter <span class="rainbow">mon serveur</span></h1>
+      <p class="mut" style="font-weight:700;font-size:18px">Tu peux seulement ajouter les serveurs que tu possèdes ou que tu gères.</p>
+    </div>
+    <a class="btn glass sm svback svBack" href="/serveurs">← Retour aux serveurs</a>
+
+    <section class="panel hidden" id="svNeedLogin" style="text-align:center">
+      <p id="svNeedTxt" style="font-weight:700;margin-bottom:16px"></p>
+      <button id="btnLogin4" class="btn">Se connecter avec Discord</button>
+    </section>
+
+    <section class="panel hidden" id="svPick">
+      <div class="ptitle"><span class="num">1</span><h2>Choisis ton serveur</h2></div>
+      <div id="svGuilds" class="guilds"></div>
+      <p id="svNoGuild" class="hidden" style="font-weight:700">Aucun serveur où tu es propriétaire ou où tu as la permission « Gérer le serveur ».</p>
+      <div class="fmsg" id="svGuildMsg" style="margin-top:14px"></div>
+    </section>
+
+    <section class="panel hidden" id="svForm">
+      <div class="ptitle"><span class="num">2</span><h2>Les infos</h2></div>
+      <label for="svInvite" style="margin-top:0">Invitation Discord permanente</label>
+      <div class="field"><span class="pre">🔗</span><input id="svInvite" placeholder="https://discord.gg/abcdEF" autocomplete="off" spellcheck="false"><span class="st" id="svInvSt"></span></div>
+      <small class="hint">Dans Discord : Inviter des gens → Modifier le lien → « Expire après : <b>Jamais</b> ».</small>
+      <div class="fmsg" id="svInvMsg"></div>
+      <div class="svprev hidden" id="svPrev"></div>
+
+      <label for="svCat">Catégorie</label>
+      <div class="field"><select id="svCat"></select></div>
+
+      <label for="svDesc">Description</label>
+      <div class="field"><textarea id="svDesc" maxlength="300" placeholder="De quoi parle ton serveur ? Qu'est-ce qu'on y fait ? (10 à 300 caractères)"></textarea></div>
+      <small class="hint" id="svCount">0/300</small>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px">
+        <button id="svSubmit" class="btn green" disabled>🚀 Ajouter à la liste</button>
+        <a class="btn glass sm svBack" href="/serveurs">Annuler</a>
+      </div>
+      <div id="svMsg" class="alert hidden" style="margin-top:16px"></div>
+    </section>
+  </main>
+
   <div class="foot">Fait avec 💜 · Non affilié à Discord Inc. · <a href="#" id="btnAdmin" style="color:#fff">🔐 Admin</a></div>
 </div>
 
@@ -377,7 +494,7 @@ HOST = HOST + BASE;
 var REDIRECT_URI = ORIGIN + "/";
 Array.prototype.forEach.call(document.querySelectorAll('a[href="/"]'), function (a) { a.href = REDIRECT_URI; });
 var SLUG_RE = /^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/;
-var RESERVED = ["admin","api","login","logout","auth","app","dashboard","index","about","terms","privacy","help","support","discord","static"];
+var RESERVED = ["admin","api","login","logout","auth","app","dashboard","index","about","terms","privacy","help","support","discord","static","serveurs","servers"];
 var API = "https://discord.com/api/v10";
 
 /* ---------- Filet de sécurité : toute erreur s'affiche en haut de la page ---------- */
@@ -480,7 +597,11 @@ var isFile = location.protocol === "file:";
    affiche simplement l'accueil au lieu d'une fausse « Erreur 404 ». */
 var isSlugPath = !isFile && SLUG_RE.test(path) && RESERVED.indexOf(path) < 0;
 if (isSlugPath) { show($("redirect")); runRedirect(path); }
-else { show($("app")); runApp(); if (path === "admin" || location.hash === "#admin") openAdmin(); }
+else {
+  show($("app")); runApp();
+  if (path === "admin" || location.hash === "#admin") openAdmin();
+  else if (/^(serveurs|servers)(\/|$)/.test(path) || location.hash === "#serveurs") openServers(false, path.split("/")[1] || "");
+}
 
 function isExpired(d) { try { return !!(d && d.expireAt && d.expireAt.toMillis() < Date.now()); } catch (e) { return false; } }
 function expTxt(d) { try { return d && d.expireAt ? " · ⏳ expire le " + new Date(d.expireAt.toMillis()).toLocaleDateString("fr-FR") : ""; } catch (e) { return ""; } }
@@ -516,6 +637,18 @@ function runApp() {
   $("btnFree").onclick = startFree; $("btnLogin2").onclick = login;
   $("btnOut").onclick = function () { sessionStorage.removeItem("dc_session"); if (FB) FB.auth.signOut().catch(function () {}); location.href = REDIRECT_URI; };
   $("btnCreate").onclick = createLink; $("btnAdmin").onclick = openAdmin;
+  /* navigation + annuaire de serveurs + notifications */
+  $("navLinks").href = REDIRECT_URI; $("navServers").href = ORIGIN + "/serveurs";
+  $("navServers").onclick = function (e) { e.preventDefault(); openServers(true); };
+  $("btnServers").onclick = function () { openServers(true); };
+  window.addEventListener("popstate", function () { location.reload(); });
+  $("btnLogin3").onclick = login;
+  $("svAdd").onclick = function () { openServers(true, "ajouter"); }; $("btnLogin4").onclick = login;
+  Array.prototype.forEach.call(document.querySelectorAll(".svBack"), function (a) { a.href = ORIGIN + "/serveurs"; a.onclick = function (e) { e.preventDefault(); openServers(true, ""); }; });
+  $("svInvite").addEventListener("input", onSvInvite);
+  $("svDesc").addEventListener("input", svRefresh); $("svCat").addEventListener("change", svRefresh);
+  $("svSubmit").onclick = svCreate; $("svSearch").addEventListener("input", svRender);
+  $("nfClear").onclick = clearNotifs;
   $("adGo").onclick = adminUnlock; $("adCode").addEventListener("keydown", function (e) { if (e.key === "Enter") adminUnlock(); });
   $("adSearch").addEventListener("input", adminRender); $("adRefresh").onclick = adminLoad; $("adQuit").onclick = adminQuit;
   Array.prototype.forEach.call(document.querySelectorAll(".adBack"), function (b) { b.onclick = function () { location.href = REDIRECT_URI; }; });
@@ -551,6 +684,7 @@ function login() {
   }
   var state = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2));
   sessionStorage.setItem("dc_state", state);
+  if (serversOn()) sessionStorage.setItem("dc_next", svSub || "list");
   var p = new URLSearchParams({ client_id: DISCORD_CLIENT_ID, response_type: "token", scope: "identify guilds", redirect_uri: REDIRECT_URI, state: state });
   location.href = "https://discord.com/oauth2/authorize?" + p.toString();
 }
@@ -570,7 +704,7 @@ function consumeCallback() {
 function stored() { try { var s = JSON.parse(sessionStorage.getItem("dc_session") || "null"); return s && s.exp > Date.now() ? s : null; } catch (e) { return null; } }
 
 function loadSession(token) {
-  show($("btnLogin"), false); show($("btnFree"), false);
+  show($("btnLogin"), false); show($("btnFree"), false); show($("btnLogin3"), false);
   var H = { headers: { Authorization: "Bearer " + token } };
   Promise.all([fetch(API + "/users/@me", H), fetch(API + "/users/@me/guilds", H)]).then(function (r) {
     if (r[0].status === 401 || r[1].status === 401) throw new Error("Ta session Discord a expiré, reconnecte-toi.");
@@ -581,9 +715,9 @@ function loadSession(token) {
       .sort(function (a, b) { return (b.owner - a.owner) || a.name.localeCompare(b.name); });
     session = { user: d[0], guilds: guilds };
     return ensureUid();
-  }).then(function (u) { uid = u; openDash(); loadMyLinks(); loadGuildLinks(); })
+  }).then(function (u) { uid = u; openDash(); loadMyLinks(); loadGuildLinks(); loadNotifs(); svSessionReady(); })
   .catch(function (e) {
-    sessionStorage.removeItem("dc_session"); show($("btnLogin")); show($("btnFree"));
+    sessionStorage.removeItem("dc_session"); show($("btnLogin")); show($("btnFree")); show($("btnLogin3"));
     loginError(e.code ? fbError(e) : e.message); $("help").open = true;
   });
 }
@@ -607,7 +741,7 @@ function openDash() {
   var u = session.user, name = u.global_name || u.username;
   $("uName").textContent = name; $("hello").textContent = name;
   $("uAv").src = u.avatar ? "https://cdn.discordapp.com/avatars/" + u.id + "/" + u.avatar + ".png?size=64" : "https://cdn.discordapp.com/embed/avatars/0.png";
-  show($("navUser")); show($("home"), false); show($("dash"), !adminOn()); show($("guildHelp"), false);
+  show($("navUser")); show($("home"), false); show($("dash"), !adminOn() && !serversOn()); show($("guildHelp"), false);
   var ow = session.guilds.filter(function (g) { return g.owner; }).length;
   $("rankInfo").textContent = "Connecté avec Discord · 👑 propriétaire de " + ow + " serveur(s) · 🛠️ gestionnaire de " + (session.guilds.length - ow) + " serveur(s)"; show($("rankInfo"));
   document.querySelector(".sec h2").textContent = "Mes liens & ceux de mes serveurs";
@@ -803,7 +937,7 @@ var adAll = [];
 function adminOn() { return !$("adminView").classList.contains("hidden"); }
 function openAdmin(ev) {
   if (ev && ev.preventDefault) ev.preventDefault();
-  show($("home"), false); show($("dash"), false); show($("adminView"));
+  show($("home"), false); show($("dash"), false); show($("serversView"), false); show($("adminView"));
   show($("adLock")); show($("adPanel"), false); $("adErr").textContent = ""; window.scrollTo(0, 0);
   ensureUid().then(function (u) {
     uid = u;
@@ -863,7 +997,7 @@ function adminRender() {
 }
 
 /* ----- Rangs : 2 = propriétaire, 1 = gestionnaire (Gérer le serveur / Admin), 0 = visiteur ----- */
-var RANK_LABEL = ["👤 Visiteur", "🛠️ Gestionnaire", "👑 Propriétaire"];
+var RANK_LABEL = ["👤 Visiteur", "🛠️ Gestionnaire", "👑 Propriétaire", "🔐 Administrateur"];
 function rankOf(gid) {
   if (!session || !gid) return 0;
   for (var i = 0; i < session.guilds.length; i++) if (session.guilds[i].id === gid) return session.guilds[i].owner ? 2 : 1;
@@ -945,12 +1079,14 @@ function step(name, p) { return Promise.resolve(p).catch(function (e) { try { e.
 function replaceOld(old) {
   var r = rankOf(old.guildId);
   var pre = (r > 0 && old.guildId) ? claimFor(old.guildId, r) : Promise.resolve();
-  return pre.then(function () { return FB.deleteDoc(FB.doc(FB.db, "links", old.slug)); });
+  /* on prévient l'ancien propriétaire (s'il a un compte Discord) AVANT la suppression : les règles vérifient que le lien existe encore */
+  return pre.then(function () { return notifyReplaced(old); })
+    .then(function () { return FB.deleteDoc(FB.doc(FB.db, "links", old.slug)); });
 }
 function cleanup(gid, rank, keep) {
   return FB.getDocs(FB.query(FB.collection(FB.db, "links"), FB.where("guildId", "==", gid))).then(function (snap) {
     var dels = snap.docs.filter(function (d) { return d.id !== keep && (d.data().ownerRank || 0) < rank; })
-      .map(function (d) { return FB.deleteDoc(d.ref); });
+      .map(function (d) { return notifyReplaced(d.data()).then(function () { return FB.deleteDoc(d.ref); }); });
     return Promise.all(dels).then(function () { return dels.length; });
   }).catch(function () { return 0; });
 }
@@ -1022,6 +1158,286 @@ function loadMyLinks() {
       }
     });
   }).catch(function (e) { box.textContent = ""; $("cnt").textContent = "0"; var er = document.createElement("div"); er.className = "alert err"; er.textContent = fbError(e); box.appendChild(er); });
+}
+
+/* ----- Notifications : « ton lien a été remplacé » (seulement pour les gens connectés avec Discord) ----- */
+function notifyReplaced(old) {
+  if (!old || !old.ownerDiscordId || !FB) return Promise.resolve();                 // visiteur anonyme : pas de compte, donc pas de message
+  var me = session && session.user;
+  if (me && me.id === old.ownerDiscordId) return Promise.resolve();                 // on remplace son propre lien : inutile
+  return FB.addDoc(FB.collection(FB.db, "notifications"), {
+    toDiscordId: old.ownerDiscordId, slug: old.slug, guildName: String(old.guildName || "Serveur Discord").slice(0, 100) || "Serveur Discord",
+    byName: me ? String(me.global_name || me.username).slice(0, 100) : "un administrateur",
+    byRank: isAdmin ? 3 : rankOf(old.guildId), createdAt: FB.serverTimestamp()
+  }).catch(function () {});                                                          // un échec ne doit jamais bloquer le remplacement
+}
+var notifCount = -1;
+function loadNotifs() {
+  var box = $("notifs");
+  if (!session || !session.user || !FB) { show(box, false); return Promise.resolve(); }
+  return FB.getDocs(FB.query(FB.collection(FB.db, "notifications"), FB.where("toDiscordId", "==", session.user.id))).then(function (snap) {
+    var list = snap.docs.map(function (d) { var x = d.data(); x._ref = d.ref; return x; })
+      .sort(function (a, b) { return ((b.createdAt && b.createdAt.seconds) || 9e9) - ((a.createdAt && a.createdAt.seconds) || 9e9); });
+    renderNotifs(list);
+    if (list.length && notifCount < 0) toast("🔔 " + list.length + " de tes liens ont été remplacés par un rang supérieur");
+    notifCount = list.length;
+  }).catch(function () { show(box, false); });
+}
+function renderNotifs(list) {
+  var box = $("notifList"); box.textContent = ""; show($("notifs"), list.length > 0); show($("nfClear"), list.length > 1);
+  list.forEach(function (n) {
+    var row = document.createElement("div"); row.className = "nf";
+    var ic = document.createElement("span"); ic.className = "nf-i"; ic.textContent = "🔁";
+    var p = document.createElement("p");
+    var dt = n.createdAt && n.createdAt.seconds ? new Date(n.createdAt.seconds * 1000).toLocaleDateString("fr-FR") + " · " : "";
+    p.textContent = dt + "Ton lien « " + HOST + "/" + n.slug + " » (« " + n.guildName + " ») a été remplacé par " + n.byName + " (" + (RANK_LABEL[n.byRank] || RANK_LABEL[0]) + "), qui a un rang supérieur au tien.";
+    var ok = document.createElement("button"); ok.className = "btn glass sm"; ok.textContent = "OK";
+    ok.onclick = function () { FB.deleteDoc(n._ref).then(function () { loadNotifs(); }).catch(function (e) { toast(fbError(e), "err"); }); };
+    row.appendChild(ic); row.appendChild(p); row.appendChild(ok); box.appendChild(row);
+  });
+}
+function clearNotifs() {
+  FB.getDocs(FB.query(FB.collection(FB.db, "notifications"), FB.where("toDiscordId", "==", session.user.id)))
+    .then(function (snap) { return Promise.all(snap.docs.map(function (d) { return FB.deleteDoc(d.ref); })); })
+    .then(function () { loadNotifs(); }).catch(function (e) { toast(fbError(e), "err"); });
+}
+
+/* ----- Annuaire de serveurs : /serveurs (liste), /serveurs/ID (page du serveur), /serveurs/ajouter (ajout) ----- */
+var SV_CATS = [["gaming", "🎮 Gaming"], ["communaute", "💬 Communauté"], ["anime", "🎌 Anime & Manga"], ["musique", "🎵 Musique"], ["art", "🎨 Art & Créa"],
+  ["code", "💻 Programmation"], ["etudes", "📚 Études & Savoir"], ["entraide", "🤝 Entraide"], ["roleplay", "🎭 Roleplay"], ["autre", "🌍 Autre"]];
+function svViews() { return ["serversView", "svDetail", "svAddView"]; }
+var svAll = [], svCat = "", svLoaded = false, svSub = "", svInfo = null, svBlock = null, svReplace = null, svPicked = null, svCur = null, svTimer;
+function svLabel(id) { for (var i = 0; i < SV_CATS.length; i++) if (SV_CATS[i][0] === id) return SV_CATS[i][1]; return id; }
+function serversOn() { return svViews().some(function (id) { return !$(id).classList.contains("hidden"); }); }
+function svUrl(sub) { return ORIGIN + "/serveurs" + (sub ? "/" + sub : ""); }
+function svBox(sub) { return $(sub === "ajouter" ? "svGuildMsg" : sub ? "svDetBox" : "svList"); }
+
+/* sub : "" = liste, "ajouter" = page d'ajout, sinon l'identifiant du serveur */
+function openServers(push, sub) {
+  sub = sub || "";
+  ["home", "dash", "adminView"].concat(svViews()).forEach(function (id) { show($(id), false); });
+  show($(sub === "ajouter" ? "svAddView" : sub ? "svDetail" : "serversView"));
+  $("navServers").classList.add("on"); $("navLinks").classList.remove("on");
+  if (push) { try { history.pushState(null, "", svUrl(sub)); } catch (e) {} }
+  window.scrollTo(0, 0);
+  return loadFirebase().then(function (fb) { return fb.auth.authStateReady ? fb.auth.authStateReady() : null; }).then(function () {
+    svSub = sub; svPicked = null;
+    uid = FB.auth.currentUser ? FB.auth.currentUser.uid : uid;
+    if (!uid) return;
+    return FB.getDoc(FB.doc(FB.db, "admins", uid)).then(function (a) { isAdmin = a.exists(); }, function () { isAdmin = false; });
+  }).then(function () {
+    if (sub === "ajouter") return svAddInit();
+    if (sub) return svDetailLoad(sub);
+    show($("btnLogin3"), !session); svRenderCats(); return loadServers();
+  }).catch(function (e) {
+    var b = svBox(sub); b.textContent = ""; var er = document.createElement("div"); er.className = "alert err"; er.textContent = fbError(e); b.appendChild(er);
+  });
+}
+/* la session Discord vient d'arriver : on met à jour la page en cours (ou on revient sur la page serveurs d'où on est parti) */
+function svSessionReady() {
+  var nx = sessionStorage.getItem("dc_next");
+  if (nx) { sessionStorage.removeItem("dc_next"); openServers(true, nx === "list" ? "" : nx); return; }
+  if (!serversOn()) return;
+  if (svSub === "ajouter") svAddInit(); else if (svSub) svDetailRender(); else svRender();
+}
+
+/* --- liste : tuiles sans description (le détail est sur la page du serveur) --- */
+function svRenderCats() {
+  var sel = $("svCat");
+  if (!sel.options.length) {
+    var o0 = document.createElement("option"); o0.value = ""; o0.textContent = "Choisis une catégorie…"; sel.appendChild(o0);
+    SV_CATS.forEach(function (c) { var o = document.createElement("option"); o.value = c[0]; o.textContent = c[1]; sel.appendChild(o); });
+  }
+  var box = $("svCats"); box.textContent = "";
+  [["", "✨ Toutes"]].concat(SV_CATS).forEach(function (c) {
+    var b = document.createElement("button"); b.type = "button"; b.className = "cat" + (svCat === c[0] ? " on" : ""); b.textContent = c[1];
+    b.onclick = function () { svCat = c[0]; svRenderCats(); svRender(); };
+    box.appendChild(b);
+  });
+}
+function loadServers() {
+  var box = $("svList"); box.textContent = ""; $("svCnt").textContent = "…";
+  var ld = document.createElement("div"); ld.className = "empty"; ld.textContent = "⏳ Chargement des serveurs…"; box.appendChild(ld);
+  return FB.getDocs(FB.query(FB.collection(FB.db, "servers"), FB.orderBy("createdAt", "desc"), FB.limit(200))).then(function (snap) {
+    svAll = snap.docs.map(function (d) { return d.data(); }); svLoaded = true; svRender();
+  });
+}
+function svRender() {
+  var box = $("svList"); if (!svLoaded) return;
+  var q = $("svSearch").value.trim().toLowerCase();
+  var list = svAll.filter(function (s) {
+    return (!svCat || s.category === svCat) && (!q || (s.name + " " + s.description + " " + svLabel(s.category)).toLowerCase().indexOf(q) >= 0);
+  });
+  $("svCnt").textContent = (q || svCat) ? list.length + " / " + svAll.length : svAll.length; box.textContent = "";
+  if (!list.length) {
+    var e = document.createElement("div"); e.className = "empty"; e.style.gridColumn = "1/-1";
+    e.textContent = svAll.length ? "Aucun serveur ne correspond à ta recherche." : "Aucun serveur pour l'instant. Ajoute le premier ✨";
+    box.appendChild(e); return;
+  }
+  list.forEach(function (s) {
+    var a = document.createElement("a"); a.className = "svtile"; a.href = svUrl(s.guildId);
+    a.onclick = function (ev) { ev.preventDefault(); openServers(true, s.guildId); };
+    var nm = document.createElement("div"); nm.className = "sv-name"; nm.textContent = s.name;
+    var bd = document.createElement("span"); bd.className = "svbadge"; bd.style.margin = "0"; bd.textContent = svLabel(s.category);
+    a.appendChild(iconNode("gi", s.guildId, s.icon, s.name)); a.appendChild(nm); a.appendChild(bd);
+    if (typeof s.memberCount === "number") { var m = document.createElement("small"); m.textContent = "~" + s.memberCount.toLocaleString("fr-FR") + " membres"; a.appendChild(m); }
+    box.appendChild(a);
+  });
+}
+
+/* --- page d'un serveur --- */
+function svDetailLoad(gid) {
+  $("svDetBox").textContent = "⏳ Chargement…"; svCur = null;
+  if (!/^[0-9]{15,22}$/.test(gid)) { svDetailRender(); return; }
+  return FB.getDoc(FB.doc(FB.db, "servers", gid)).then(function (sn) { svCur = sn.exists() ? sn.data() : null; svDetailRender(); });
+}
+function svDetailRender() {
+  var box = $("svDetBox"), s = svCur; box.textContent = "";
+  if (!s) { var e = document.createElement("div"); e.className = "empty"; e.textContent = "🤷 Ce serveur n'est pas (ou plus) dans la liste."; box.appendChild(e); return; }
+  document.title = s.name + " — DiscordLink";
+  var hero = document.createElement("div"); hero.className = "svhero";
+  var t = document.createElement("div"); t.style.minWidth = 0;
+  var h = document.createElement("h1"); h.textContent = s.name;
+  var meta = document.createElement("div"); meta.style.marginTop = "8px";
+  var bd = document.createElement("span"); bd.className = "svbadge"; bd.textContent = svLabel(s.category); meta.appendChild(bd);
+  if (typeof s.memberCount === "number") meta.appendChild(document.createTextNode("~" + s.memberCount.toLocaleString("fr-FR") + " membres"));
+  t.appendChild(h); t.appendChild(meta); hero.appendChild(iconNode("gi", s.guildId, s.icon, s.name)); hero.appendChild(t); box.appendChild(hero);
+  var d2 = document.createElement("h2"); d2.textContent = "Description"; d2.style.cssText = "margin-top:26px;font-size:22px"; box.appendChild(d2);
+  var d = document.createElement("p"); d.className = "svdesc"; d.textContent = s.description; box.appendChild(d);
+  var info = document.createElement("div"); info.className = "svinfo";
+  var dt = s.createdAt && s.createdAt.seconds ? new Date(s.createdAt.seconds * 1000).toLocaleDateString("fr-FR") : "";
+  var l1 = document.createElement("div"); l1.textContent = "👤 Ajouté par " + (s.ownerName || "un visiteur") + " · " + RANK_LABEL[s.ownerRank || 0]; info.appendChild(l1);
+  if (dt) { var l2 = document.createElement("div"); l2.textContent = "📅 Le " + dt; info.appendChild(l2); }
+  box.appendChild(info);
+  var act = document.createElement("div"); act.style.cssText = "display:flex;gap:12px;flex-wrap:wrap;margin-top:26px";
+  var j = document.createElement("a"); j.className = "btn green"; j.href = s.invite; j.target = "_blank"; j.rel = "noopener noreferrer"; j.textContent = "🚀 Rejoindre le serveur";
+  act.appendChild(j);
+  var mr = rankOf(s.guildId);
+  if (isMine(s) || isAdmin || mr > (s.ownerRank || 0)) {
+    var del = document.createElement("button"); del.className = "btn red sm"; del.textContent = "🗑️ Retirer de la liste"; del.onclick = function () { svDelete(s); }; act.appendChild(del);
+  }
+  box.appendChild(act);
+}
+function svDelete(s) {
+  if (!confirm("Retirer « " + s.name + " » de la liste ?")) return;
+  var ref = FB.doc(FB.db, "servers", s.guildId);
+  FB.getDoc(ref).then(function (sn) {
+    if (!sn.exists()) throw { stale: "Ce serveur a déjà été retiré." };
+    var cur = sn.data(), mr = rankOf(cur.guildId);
+    if (!(isMine(cur) || isAdmin || mr > (cur.ownerRank || 0))) throw { stale: "Cette entrée a été remplacée par quelqu'un d'un rang supérieur." };
+    return (!isMine(cur) && !isAdmin && mr > 0) ? step("enregistrement de ton rang", claimFor(cur.guildId, mr)) : null;
+  }).then(function () { return FB.deleteDoc(ref); })
+    .then(function () { toast("Serveur retiré de la liste"); openServers(true, ""); })
+    .catch(function (e) { if (e && e.stale) { toast(e.stale, "err"); openServers(true, ""); } else toast(fbError(e), "err"); });
+}
+
+/* --- page « Ajouter mon serveur » : uniquement MES serveurs (propriétaire ou « Gérer le serveur ») --- */
+function svAddInit() {
+  svRenderCats();
+  var logged = !!session, wait = !logged && !!stored();
+  show($("svNeedLogin"), !logged); show($("btnLogin4"), !logged && !wait);
+  $("svNeedTxt").textContent = wait ? "⏳ Connexion à Discord…" : "Pour ajouter un serveur, connecte-toi avec Discord : tu ne peux ajouter que les serveurs que tu possèdes ou que tu gères.";
+  show($("svPick"), logged);
+  if (!logged) { show($("svForm"), false); return; }
+  svRenderGuilds();
+}
+function svRenderGuilds() {
+  var box = $("svGuilds"); box.textContent = ""; show($("svNoGuild"), session.guilds.length === 0);
+  session.guilds.forEach(function (g) {
+    var b = document.createElement("button"); b.className = "guild" + (svPicked && svPicked.id === g.id ? " sel" : ""); b.type = "button";
+    var n = document.createElement("span"); n.className = "gn"; n.textContent = g.name;
+    var t = document.createElement("span"); t.className = "gt"; t.textContent = g.owner ? "👑 Propriétaire" : "🛠️ Gestionnaire";
+    b.appendChild(iconNode("gi", g.id, g.icon, g.name)); b.appendChild(n); b.appendChild(t);
+    b.onclick = function () { svPick(g, b); };
+    box.appendChild(b);
+  });
+}
+function svPick(g, btn) {
+  svPicked = g; svBlock = null; svReplace = null; svInfo = null; clearTimeout(svTimer);
+  Array.prototype.forEach.call(document.querySelectorAll("#svGuilds .guild"), function (x) { x.classList.remove("sel"); }); btn.classList.add("sel");
+  $("svInvite").value = ""; svSetInv("", "", ""); show($("svPrev"), false); show($("svForm"), false); show($("svMsg"), false);
+  var m = $("svGuildMsg"); m.className = "fmsg wait"; m.textContent = "⏳ Vérification…";
+  loadFirebase().then(function () { return FB.getDoc(FB.doc(FB.db, "servers", g.id)); }).then(function (sn) {
+    if (svPicked !== g) return;
+    if (sn.exists()) {
+      var ex = sn.data(), my = g.owner ? 2 : 1;
+      if (my > (ex.ownerRank || 0)) { svReplace = ex; m.className = "fmsg warn"; m.textContent = "🔁 Ce serveur est déjà dans la liste (ajouté par " + (ex.ownerName || "un visiteur") + ", " + RANK_LABEL[ex.ownerRank || 0] + "). Comme tu as un rang supérieur, son entrée sera remplacée par la tienne."; }
+      else { svBlock = ex; m.className = "fmsg no"; m.textContent = "❌ Ce serveur est déjà dans la liste" + (isMine(ex) ? " (c'est toi). Ouvre sa page et retire-le d'abord si tu veux le refaire." : "."); }
+    } else { m.className = "fmsg ok"; m.textContent = "✅ « " + g.name + " » n'est pas encore dans la liste."; }
+    show($("svForm"), !svBlock); svRefresh();
+  }).catch(function (e) { m.className = "fmsg no"; m.textContent = "❌ " + fbError(e); });
+}
+function svSetInv(kind, st, long, mk) {
+  var inp = $("svInvite"); inp.parentElement.classList.toggle("good", kind === "ok"); inp.parentElement.classList.toggle("bad", kind === "no");
+  $("svInvSt").className = "st " + kind; $("svInvSt").textContent = st;
+  var m = $("svInvMsg"); m.className = "fmsg " + (mk || kind); m.textContent = long || "";
+}
+function svMsg(t, k) { var e = $("svMsg"); e.className = "alert " + k; e.textContent = t; }
+function svRefresh() {
+  var raw = $("svDesc").value, n = raw.trim().length;
+  $("svCount").textContent = raw.length + "/300" + (n > 0 && n < 10 ? " · encore " + (10 - n) + " caractère(s) minimum" : "");
+  $("svSubmit").disabled = !(svPicked && svInfo && !svBlock && $("svCat").value && n >= 10 && n <= 300);
+}
+function onSvInvite() {
+  var v = $("svInvite").value; svInfo = null; clearTimeout(svTimer); show($("svPrev"), false); svRefresh();
+  if (!v.trim()) return svSetInv("", "", "");
+  var code = parseInvite(v);
+  if (!code) return svSetInv("no", "Invalide", "❌ Format d'invitation invalide (exemple : discord.gg/abcdEF).");
+  svSetInv("wait", "Vérification…", "⏳ Vérification de l'invitation…");
+  svTimer = setTimeout(function () { svCheck(code, v); }, 450);
+}
+function svCheck(code, v) {
+  var inp = $("svInvite"), g = svPicked;
+  if (!g) return;
+  fetch(API + "/invites/" + code + "?with_counts=true").then(function (r) {
+    if (r.status === 404) throw new Error("NOTFOUND");
+    if (!r.ok) throw new Error("DISCORD");
+    return r.json();
+  }).then(function (inv) {
+    if (inp.value !== v || svPicked !== g) return;
+    if (!inv.guild || !/^[0-9]{15,22}$/.test(inv.guild.id || "")) throw new Error("NOGUILD");
+    if (inv.expires_at) throw new Error("EXPIRES");
+    if (inv.guild.id !== g.id) throw new Error("OTHER:" + (inv.guild.name || "un autre serveur"));
+    svInfo = { code: code, members: inv.approximate_member_count };
+    var pv = $("svPrev"); pv.textContent = "";
+    var tx = document.createElement("div"), b = document.createElement("b"), sm = document.createElement("small");
+    b.textContent = g.name; sm.textContent = typeof svInfo.members === "number" ? "~" + svInfo.members.toLocaleString("fr-FR") + " membres" : "Serveur Discord";
+    tx.appendChild(b); tx.appendChild(sm); pv.appendChild(iconNode("gi", g.id, g.icon, g.name)); pv.appendChild(tx); show(pv);
+    svSetInv("ok", "Valide ✓", "✅ Invitation valide pour « " + g.name + " »");
+    svRefresh();
+  }).catch(function (e) {
+    if (inp.value !== v) return;
+    var m = e && e.message || "";
+    if (m === "NOTFOUND") svSetInv("no", "Introuvable", "❌ Cette invitation n'existe pas ou a expiré.");
+    else if (m === "EXPIRES") svSetInv("no", "Expire", "❌ Cette invitation expire un jour. Crée-en une avec l'expiration « Jamais ».");
+    else if (m === "NOGUILD") svSetInv("no", "Invalide", "❌ Cette invitation ne mène pas vers un serveur.");
+    else if (m.indexOf("OTHER:") === 0) svSetInv("no", "Autre serveur", "❌ Cette invitation mène vers « " + m.slice(6) + " », pas vers « " + g.name + " ». Tu ne peux ajouter que ton propre serveur.");
+    else if (m === "DISCORD" || e instanceof TypeError) svSetInv("no", "Erreur", "❌ Impossible de vérifier l'invitation auprès de Discord (réseau, bloqueur de pub ?). Réessaie.");
+    else svSetInv("no", "Erreur", "❌ " + fbError(e));
+  });
+}
+function svCreate() {
+  if (!svPicked || !svInfo || svBlock || !session) return;
+  var g = svPicked, info = svInfo, old = svReplace, desc = $("svDesc").value.trim(), cat = $("svCat").value;
+  $("svSubmit").disabled = true; svMsg("Ajout en cours…", "warn");
+  ensureUid().then(function (u) {
+    uid = u;
+    var rank = g.owner ? 2 : 1;
+    var data = { guildId: g.id, name: String(g.name).slice(0, 100), icon: g.icon || null, invite: "https://discord.gg/" + info.code,
+      description: desc, category: cat, ownerUid: uid, ownerDiscordId: session.user.id,
+      ownerName: String(session.user.global_name || session.user.username).slice(0, 100), ownerRank: rank, createdAt: FB.serverTimestamp() };
+    if (typeof info.members === "number") data.memberCount = info.members;
+    var ref = FB.doc(FB.db, "servers", g.id);
+    var chain = step("enregistrement de ton rang", claimFor(g.id, rank));
+    if (old) chain = chain.then(function () { return step("remplacement de l'ancienne entrée", FB.deleteDoc(ref)); });
+    return chain.then(function () { return step("ajout du serveur", FB.setDoc(ref, data)); });
+  }).then(function () {
+    confetti(); toast("✅ Serveur ajouté à la liste !");
+    $("svInvite").value = ""; $("svDesc").value = ""; $("svCat").value = ""; svInfo = null; svReplace = null; svBlock = null; svPicked = null;
+    svSetInv("", "", ""); show($("svPrev"), false); show($("svMsg"), false); show($("svForm"), false);
+    return openServers(true, g.id);
+  }).catch(function (e) { svMsg((e.step ? "Étape « " + e.step + " » refusée ou en échec. " : "") + (e.code ? fbError(e) + " [" + e.code + "]" : e.message), "err"); })
+    .then(svRefresh);
 }
 
 /* ----- Animation de frappe ----- */

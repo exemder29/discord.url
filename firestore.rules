@@ -6,7 +6,7 @@ service cloud.firestore {
     function validSlug(s) {
       return s.matches('^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$')
         && !(s in ['admin', 'api', 'login', 'logout', 'auth', 'app', 'dashboard', 'index',
-                   'about', 'terms', 'privacy', 'help', 'support', 'discord', 'static']);
+                   'about', 'terms', 'privacy', 'help', 'support', 'discord', 'static', 'serveurs', 'servers']);
     }
 
     // Rang déclaré par l'utilisateur pour un serveur : 0 = visiteur, 1 = gestionnaire, 2 = propriétaire
@@ -93,6 +93,68 @@ service cloud.firestore {
             || isAdmin()
             || (resource.data.get('expireAt', null) != null && resource.data.expireAt < request.time)   // lien expiré : n'importe qui peut le nettoyer
             || claimRank(resource.data.get('guildId', '')) > resource.data.get('ownerRank', 0));
+    }
+
+    // Notifications : « ton lien a été remplacé » (uniquement pour un lien créé avec un compte Discord).
+    // Créée AVANT la suppression du lien : les règles vérifient que le lien existe encore, qu'il appartient bien
+    // à cette personne Discord et que l'auteur a un rang supérieur (ou est admin).
+    match /notifications/{id} {
+      allow get, list: if request.auth != null;
+      allow delete: if request.auth != null;   // « OK » = on supprime la notification
+      allow update: if false;
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['toDiscordId', 'slug', 'guildName', 'byName', 'byRank', 'createdAt'])
+        && request.resource.data.keys().hasAll(['toDiscordId', 'slug', 'guildName', 'byName', 'byRank', 'createdAt'])
+        && request.resource.data.toDiscordId is string
+        && request.resource.data.toDiscordId.matches('^[0-9]{15,22}$')
+        && request.resource.data.slug is string
+        && request.resource.data.guildName is string && request.resource.data.guildName.size() >= 1 && request.resource.data.guildName.size() <= 100
+        && request.resource.data.byName is string && request.resource.data.byName.size() >= 1 && request.resource.data.byName.size() <= 100
+        && request.resource.data.byRank in [0, 1, 2, 3]
+        && exists(/databases/$(database)/documents/links/$(request.resource.data.slug))
+        && get(/databases/$(database)/documents/links/$(request.resource.data.slug)).data.get('ownerDiscordId', null) == request.resource.data.toDiscordId
+        && (isAdmin()
+            || claimRank(get(/databases/$(database)/documents/links/$(request.resource.data.slug)).data.get('guildId', ''))
+               > get(/databases/$(database)/documents/links/$(request.resource.data.slug)).data.get('ownerRank', 0))
+        && request.resource.data.createdAt == request.time;
+    }
+
+    // Annuaire de serveurs : un document par serveur (id = identifiant Discord du serveur => pas de doublon)
+    match /servers/{gid} {
+      allow get, list: if true;   // l'annuaire est public
+
+      allow create: if request.auth != null
+        && gid.matches('^[0-9]{15,22}$')
+        && request.resource.data.keys().hasOnly(['guildId', 'name', 'icon', 'invite', 'description', 'category', 'memberCount', 'ownerUid', 'ownerDiscordId', 'ownerName', 'ownerRank', 'createdAt'])
+        && request.resource.data.keys().hasAll(['guildId', 'name', 'invite', 'description', 'category', 'ownerUid', 'ownerDiscordId', 'ownerRank', 'createdAt'])
+        && request.resource.data.guildId == gid
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 100
+        && request.resource.data.invite is string
+        && request.resource.data.invite.matches('^https://discord\\.gg/[A-Za-z0-9-]{2,32}$')
+        && request.resource.data.description is string
+        && request.resource.data.description.size() >= 10 && request.resource.data.description.size() <= 300
+        && request.resource.data.category in ['gaming', 'communaute', 'anime', 'musique', 'art', 'code', 'etudes', 'entraide', 'roleplay', 'autre']
+        && (!('icon' in request.resource.data) || request.resource.data.icon == null
+            || (request.resource.data.icon is string && request.resource.data.icon.size() <= 64))
+        && (!('memberCount' in request.resource.data)
+            || (request.resource.data.memberCount is int && request.resource.data.memberCount >= 0))
+        && (!('ownerDiscordId' in request.resource.data)
+            || (request.resource.data.ownerDiscordId is string && request.resource.data.ownerDiscordId.matches('^[0-9]{15,22}$')))
+        && (!('ownerName' in request.resource.data) || (request.resource.data.ownerName is string && request.resource.data.ownerName.size() <= 100))
+        // Seulement MES serveurs : connexion Discord obligatoire + rang propriétaire (2) ou gestionnaire (1) sur CE serveur
+        && request.resource.data.ownerRank in [1, 2]
+        && claimRank(gid) >= request.resource.data.ownerRank
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if false;
+
+      // Retrait : celui qui l'a ajouté, un admin, ou quelqu'un de rang supérieur sur ce serveur
+      allow delete: if request.auth != null
+        && (resource.data.ownerUid == request.auth.uid
+            || isAdmin()
+            || claimRank(gid) > resource.data.get('ownerRank', 0));
     }
 
     // Tout le reste est interdit
