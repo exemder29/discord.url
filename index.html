@@ -130,6 +130,7 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
 #btnCreate{width:100%;margin-top:24px}
 #formMsg{margin-top:16px}
 
+.lk{position:relative}.lk-x{position:absolute;top:10px;right:12px;width:32px;height:32px;border-radius:50%;border:0;cursor:pointer;background:rgba(255,255,255,.25);color:#fff;font:800 16px sans-serif;padding:0;line-height:32px;transition:background .15s}.lk-x:hover{background:#ff4d6d}
 .gl{font-size:12px;font-weight:800;padding:2px 9px;border-radius:999px;background:#c9ffe6;color:#0b6b43}.gl:empty{display:none}.gl.rep{background:#ffe08a;color:#7a4b00}.gl.blk{background:#ffb3c1;color:#7a0a24}
 .fmsg{margin-top:8px;font-weight:800;font-size:14px;line-height:1.35}.fmsg:empty{display:none}
 .fmsg.ok{color:#4dffb0}.fmsg.no{color:#ffb3c1}.fmsg.wait{color:#eee}.fmsg.warn{color:#ffe08a}
@@ -499,7 +500,7 @@ function runRedirect(slug) {
 }
 
 /* ---------- Application ---------- */
-var session = null, selected = null, uid = null, demo = false, slugOk = false, slugTimer, isAdmin = false, slugAuto = true, slugReplace = null, inviteOk = false, inviteTimer, guildLinks = {};
+var session = null, selected = null, uid = null, demo = false, slugOk = false, slugTimer, isAdmin = false, slugAuto = true, slugReplace = null, inviteOk = false, inviteTimer, guildLinks = {}, inviteBlock = null, pinnedMem = null, pinnedSet = {};
 
 function runApp() {
   $("hHost").textContent = HOST + "/"; $("pre").textContent = HOST + "/"; $("pvH").textContent = HOST + "/";
@@ -645,10 +646,21 @@ function pick(g, btn) {
   refresh();
 }
 
-function setSt(inp, st, kind, text, long, mk) {
+/* Message sous un champ ; si "slug" est donné, affiche le lien existant (cliquable) + bouton Copier */
+function fmsgSet(m, kind, text, slug) {
+  m.className = "fmsg " + kind; m.textContent = text || "";
+  if (!text || !slug) return;
+  m.appendChild(document.createElement("br"));
+  var a = document.createElement("a"); a.href = ORIGIN + "/" + slug; a.target = "_blank"; a.rel = "noopener";
+  a.textContent = HOST + "/" + slug; a.style.cssText = "color:#fff;text-decoration:underline;word-break:break-all";
+  var b = document.createElement("button"); b.type = "button"; b.className = "btn glass sm"; b.style.cssText = "margin:8px 0 0 10px";
+  b.textContent = "📋 Copier"; b.onclick = function () { copy(ORIGIN + "/" + slug, "Lien copié ✓"); };
+  m.appendChild(a); m.appendChild(b);
+}
+function setSt(inp, st, kind, text, long, mk, slug) {
   inp.parentElement.classList.toggle("good", kind === "ok"); inp.parentElement.classList.toggle("bad", kind === "no");
   st.className = "st " + kind; st.textContent = text;
-  var m = $(st.id === "slugSt" ? "slugMsg" : "invMsg"); m.className = "fmsg " + (mk || kind); m.textContent = long || "";
+  var m = $(st.id === "slugSt" ? "slugMsg" : "invMsg"); fmsgSet(m, mk || kind, long, slug);
 }
 function onSlug() {
   var inp = $("slug");
@@ -665,11 +677,11 @@ function onSlug() {
       if (!snap.exists()) { slugOk = true; setSt(inp, $("slugSt"), "ok", "Disponible ✓", "✅ Ce nom est disponible"); }
       else {
         var d = snap.data(), rk = d.ownerRank || 0, by = d.ownerName || "un visiteur", mine = !!uid && d.ownerUid === uid;
-        if (mine) setSt(inp, $("slugSt"), "no", "Déjà à toi", "⚠️ Ce nom est déjà un de tes liens. Supprime-le d'abord dans « Mes liens ».");
+        if (mine) setSt(inp, $("slugSt"), "no", "Déjà à toi", "⚠️ Ce nom est déjà un de tes liens. Supprime-le d'abord dans « Mes liens » si tu veux le refaire :", "no", v);
         else if (isAdmin || rankOf(d.guildId) > rk) {
           slugOk = true; slugReplace = d;
-          setSt(inp, $("slugSt"), "ok", "Sera remplacé", "🔁 Ce nom est pris par " + by + " (" + RANK_LABEL[rk] + "). Tu as un rang supérieur : son lien sera supprimé et ce nom sera à toi.", "warn");
-        } else setSt(inp, $("slugSt"), "no", "Déjà pris", "❌ Ce nom est déjà pris par " + by + " (" + RANK_LABEL[rk] + ").");
+          setSt(inp, $("slugSt"), "ok", "Sera remplacé", "🔁 Ce nom est pris par " + by + " (" + RANK_LABEL[rk] + "). Tu as un rang supérieur : son lien sera supprimé et ce nom sera à toi :", "warn", v);
+        } else setSt(inp, $("slugSt"), "no", "Déjà pris", "❌ Ce nom est déjà pris par " + by + " (" + RANK_LABEL[rk] + ") pour « " + d.guildName + " ». Tu peux utiliser ce lien tel quel :", "no", v);
       }
       refresh();
     }).catch(function (e) { setSt(inp, $("slugSt"), "no", "Erreur", "❌ " + fbError(e)); });
@@ -682,7 +694,7 @@ function parseInvite(v) {
 }
 function onInvite() {
   var inp = $("invite"), v = inp.value;
-  inviteOk = false; clearTimeout(inviteTimer); refresh();
+  inviteOk = false; inviteBlock = null; clearTimeout(inviteTimer); refresh();
   if (!v.trim()) return setSt(inp, $("invSt"), "", "");
   var code = parseInvite(v);
   if (!code) return setSt(inp, $("invSt"), "no", "Invalide", "❌ Format d'invitation invalide (exemple : discord.gg/abcdEF).");
@@ -710,11 +722,11 @@ function checkInvite(code, inp, v) {
     var blockers = ex.filter(function (l) { return l.ownerUid === uid || my <= (l.ownerRank || 0); });
     var name = info && info.guild ? " pour « " + info.guild.name + " »" : "";
     if (blockers.length) {
-      var b = blockers[0], mine = b.ownerUid === uid;
-      setSt(inp, $("invSt"), "no", "Déjà pris", "❌ Ce serveur a déjà un lien : " + HOST + "/" + b.slug + " (" + RANK_LABEL[b.ownerRank || 0] + (mine ? ", c'est le tien : supprime-le d'abord" : ", seul un rang supérieur peut le remplacer") + ").");
+      var b = blockers[0], mine = b.ownerUid === uid; inviteBlock = b;
+      setSt(inp, $("invSt"), "no", "Déjà pris", "❌ Ce serveur a déjà un lien (" + RANK_LABEL[b.ownerRank || 0] + (mine ? ", c'est le tien" : ", seul un rang supérieur peut le remplacer") + "). Tu peux l'utiliser tel quel :", "no", b.slug);
     } else if (ex.length) {
       inviteOk = true;
-      setSt(inp, $("invSt"), "ok", "Remplacera", "🔁 Ce serveur a déjà un lien (" + HOST + "/" + ex[0].slug + ") d'un rang inférieur : il sera supprimé automatiquement et remplacé par le tien.", "warn");
+      setSt(inp, $("invSt"), "ok", "Remplacera", "🔁 Ce serveur a déjà un lien d'un rang inférieur : il sera supprimé automatiquement et remplacé par le tien :", "warn", ex[0].slug);
     } else {
       inviteOk = true;
       setSt(inp, $("invSt"), "ok", "Disponible ✓", "✅ Invitation valide" + name + (my ? " · tu es " + RANK_LABEL[my > 2 ? 2 : my] : ""));
@@ -729,13 +741,18 @@ function checkInvite(code, inp, v) {
     else setSt(inp, $("invSt"), "no", "Erreur", "❌ " + fbError(e));
   });
 }
-function refresh() { $("btnCreate").disabled = !(slugOk && inviteOk && parseInvite($("invite").value)); }
+function currentBlock() {
+  if (inviteBlock) return inviteBlock;
+  if (selected && !$("invite").value.trim()) { var st = guildStatus(selected); if (st.kind === "no" && st.link) return st.link; }
+  return null;
+}
+function refresh() { $("btnCreate").disabled = !((slugOk && inviteOk && parseInvite($("invite").value)) || currentBlock()); }
 function msg(t, k) { var e = $("formMsg"); e.className = "alert " + k; e.textContent = t; }
 
 /* ----- Création du lien ----- */
 function createLink() {
   var slug = $("slug").value, code = parseInvite($("invite").value);
-  if (!slugOk || !code || !inviteOk) return;
+  if (!(slugOk && code && inviteOk)) { var blk = currentBlock(); if (blk) pinLink(blk); return; }
   var replaced = !!slugReplace;
   if (demo) { confetti(); msg("🎮 Mode démo : voilà ce que ça donnerait → " + HOST + "/" + slug + ". Connecte-toi pour le créer pour de vrai !", "warn"); return; }
   $("btnCreate").disabled = true; msg("Vérification de l'invitation…", "warn");
@@ -770,7 +787,7 @@ function createLink() {
   }).then(function (removed) {
     msg("✅ Ton lien est prêt : " + HOST + "/" + slug + note + (replaced ? " · l'ancien lien de ce nom a été remplacé" : "") + (removed ? " · " + removed + " lien(s) de rang inférieur supprimé(s) automatiquement" : ""), "ok"); confetti();
     copy(ORIGIN + "/" + slug, "Lien copié dans le presse-papiers ✓");
-    $("slug").value = ""; $("invite").value = ""; slugOk = false; inviteOk = false; slugReplace = null; slugAuto = true;
+    $("slug").value = ""; $("invite").value = ""; slugOk = false; inviteOk = false; inviteBlock = null; slugReplace = null; slugAuto = true;
     setSt($("slug"), $("slugSt"), "", ""); setSt($("invite"), $("invSt"), "", ""); $("pvSlug").textContent = slug;
     loadMyLinks(); if (session) loadGuildLinks();
   }).catch(function (e) { msg(e.code ? fbError(e) : e.message, "err"); })
@@ -856,15 +873,15 @@ function guildStatus(g) {
   var blockers = ex.filter(function (l) { return l.ownerUid === uid || my <= (l.ownerRank || 0); });
   if (blockers.length) {
     var b = blockers[0];
-    return { kind: "no", badge: "🔗 Déjà pris", cls: "blk", msg: "❌ Ce serveur a déjà un lien : " + HOST + "/" + b.slug + " (" + RANK_LABEL[b.ownerRank || 0] + (b.ownerUid === uid ? ", c'est le tien : supprime-le d'abord" : ", d'un rang égal ou supérieur au tien") + ")." };
+    return { kind: "no", badge: "🔗 Déjà pris", cls: "blk", slug: b.slug, link: b, msg: "❌ Ce serveur a déjà un lien (" + RANK_LABEL[b.ownerRank || 0] + (b.ownerUid === uid ? ", c'est le tien" : ", d'un rang égal ou supérieur au tien") + ") :" };
   }
   var x = ex[0];
-  return { kind: "warn", badge: "🔁 Remplaçable", cls: "rep", msg: "🔁 Ce serveur a déjà un lien (" + HOST + "/" + x.slug + ") créé par " + (x.ownerName || "un visiteur") + " (" + RANK_LABEL[x.ownerRank || 0] + "). Comme tu es " + me + ", il sera supprimé automatiquement et remplacé par le tien." };
+  return { kind: "warn", badge: "🔁 Remplaçable", cls: "rep", slug: x.slug, msg: "🔁 Ce serveur a déjà un lien créé par " + (x.ownerName || "un visiteur") + " (" + RANK_LABEL[x.ownerRank || 0] + "). Comme tu es " + me + ", il sera supprimé automatiquement et remplacé par le tien :" };
 }
 function showGuildMsg() {
   var m = $("guildMsg");
   if (!selected) { m.className = "fmsg"; m.textContent = ""; return; }
-  var st = guildStatus(selected); m.className = "fmsg " + st.kind; m.textContent = st.msg;
+  var st = guildStatus(selected); fmsgSet(m, st.kind, st.msg, st.slug);
 }
 function loadGuildLinks() {
   if (!session) return Promise.resolve();
@@ -876,8 +893,37 @@ function loadGuildLinks() {
       Array.prototype.forEach.call(document.querySelectorAll(".guild"), function (b) {
         var st = guildStatus(b._g), gl = b.querySelector(".gl"); gl.className = "gl " + st.cls; gl.textContent = st.badge;
       });
-      showGuildMsg();
+      showGuildMsg(); refresh();
     }).catch(function () {});
+}
+/* ----- Liens déjà existants "ajoutés à ma liste" (stockés sur cet appareil, ne touchent pas à la base) ----- */
+function getPinned() {
+  if (pinnedMem) return pinnedMem;
+  try { pinnedMem = JSON.parse(localStorage.getItem("dl_pinned") || "[]") || []; } catch (e) { pinnedMem = []; }
+  return pinnedMem;
+}
+function setPinned(a) { pinnedMem = a.slice(0, 50); try { localStorage.setItem("dl_pinned", JSON.stringify(pinnedMem)); } catch (e) {} }
+function pinLink(l) {
+  if (l.ownerUid === uid) { msg("ℹ️ C'est déjà un de tes liens : il est dans « Mes liens » juste en dessous.", "warn"); }
+  else {
+    var list = getPinned().filter(function (p) { return p.slug !== l.slug; });
+    list.unshift({ slug: l.slug, guildId: l.guildId || null, guildName: l.guildName, guildIcon: l.guildIcon || null, ownerName: l.ownerName || null, ownerRank: l.ownerRank || 0, ownerUid: l.ownerUid });
+    setPinned(list);
+    msg("📌 Ce lien existe déjà : je l'ai ajouté à ta liste « Mes liens » juste en dessous. Tu peux le copier, et le retirer de ta liste avec la croix ✕ (ça ne le supprime pas).", "ok");
+  }
+  loadMyLinks();
+  try { $("myLinks").scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) {}
+}
+function checkPinned(map) {
+  var pins = getPinned().slice(); pinnedSet = {};
+  return Promise.all(pins.map(function (p) {
+    if (map[p.slug]) return null;
+    return FB.getDoc(FB.doc(FB.db, "links", p.slug)).then(function (sn) { return sn.exists() ? sn.data() : "gone"; }, function () { return p; })
+      .then(function (d) { if (d === "gone") p._gone = true; else if (d) { map[p.slug] = d; pinnedSet[p.slug] = true; } });
+  })).then(function () {
+    var keep = pins.filter(function (p) { return !p._gone; });
+    if (keep.length !== pins.length) setPinned(keep);
+  });
 }
 function replaceOld(old) {
   var r = rankOf(old.guildId);
@@ -913,6 +959,8 @@ function loadMyLinks() {
   }).then(function (snaps) {
     var map = {};
     snaps.forEach(function (sn) { sn.docs.forEach(function (d) { map[d.id] = d.data(); }); });
+    return checkPinned(map).then(function () { return map; });
+  }).then(function (map) {
     var list = Object.keys(map).map(function (k) { return map[k]; }).sort(function (a, b) { return ((b.createdAt && b.createdAt.seconds) || 9e9) - ((a.createdAt && a.createdAt.seconds) || 9e9); });
     document.querySelector(".sec h2").textContent = session ? "Mes liens & ceux de mes serveurs" : "Mes liens";
     $("cnt").textContent = list.length; box.textContent = "";
@@ -924,7 +972,7 @@ function loadMyLinks() {
       var t = document.createElement("div"); t.style.minWidth = 0;
       var a = document.createElement("a"); a.href = ORIGIN + "/" + l.slug; a.target = "_blank"; a.rel = "noopener"; a.textContent = HOST + "/" + l.slug;
       var sm = document.createElement("small");
-      sm.textContent = l.guildName + " · " + RANK_LABEL[lr] + (mine ? " · à toi" : " · par " + (l.ownerName || "un visiteur"));
+      sm.textContent = l.guildName + " · " + RANK_LABEL[lr] + (mine ? " · à toi" : " · par " + (l.ownerName || "un visiteur")) + (pinnedSet[l.slug] ? " · 📌 existant" : "");
       t.appendChild(a); t.appendChild(sm); top.appendChild(iconNode("gi", l.guildId, l.guildIcon, l.guildName)); top.appendChild(t);
       var act = document.createElement("div"); act.className = "lk-act";
       var cp = document.createElement("button"); cp.className = "btn glass sm"; cp.textContent = "📋 Copier"; cp.onclick = function () { copy(ORIGIN + "/" + l.slug, "Lien copié ✓"); };
@@ -940,6 +988,13 @@ function loadMyLinks() {
         act.appendChild(del);
       }
       c.appendChild(top); c.appendChild(act); box.appendChild(c);
+      if (pinnedSet[l.slug]) {
+        top.style.paddingRight = "38px";
+        var x = document.createElement("button"); x.type = "button"; x.className = "lk-x"; x.textContent = "✕";
+        x.title = "Retirer de ma liste (ne supprime pas le lien)";
+        x.onclick = function () { setPinned(getPinned().filter(function (p) { return p.slug !== l.slug; })); toast("Retiré de ta liste (le lien existe toujours)"); loadMyLinks(); };
+        c.appendChild(x);
+      }
     });
   }).catch(function (e) { box.textContent = ""; $("cnt").textContent = "0"; var er = document.createElement("div"); er.className = "alert err"; er.textContent = fbError(e); box.appendChild(er); });
 }
