@@ -130,6 +130,7 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
 #btnCreate{width:100%;margin-top:24px}
 #formMsg{margin-top:16px}
 
+.gl{font-size:12px;font-weight:800;padding:2px 9px;border-radius:999px;background:#c9ffe6;color:#0b6b43}.gl:empty{display:none}.gl.rep{background:#ffe08a;color:#7a4b00}.gl.blk{background:#ffb3c1;color:#7a0a24}
 .fmsg{margin-top:8px;font-weight:800;font-size:14px;line-height:1.35}.fmsg:empty{display:none}
 .fmsg.ok{color:#4dffb0}.fmsg.no{color:#ffb3c1}.fmsg.wait{color:#eee}.fmsg.warn{color:#ffe08a}
 /* ---- aperçu ---- */
@@ -259,6 +260,7 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
         <section class="panel">
           <div class="ptitle"><span class="num">1</span><h2>Ton serveur <small style="font-size:15px;opacity:.8">(optionnel)</small></h2></div>
           <div id="guilds" class="guilds"></div>
+          <div class="fmsg" id="guildMsg" style="margin-top:14px"></div>
           <div id="guildHelp" class="hidden"><p style="font-weight:700;margin-bottom:14px">Pas besoin de choisir un serveur : colle simplement l'invitation de <b>n'importe quel serveur</b> à l'étape 2. Connecté avec Discord, tu peux aussi gérer les liens des autres sur tes serveurs : <b>👑 propriétaire &gt; 🛠️ gestionnaire &gt; 👤 visiteur</b>. Un rang supérieur peut supprimer les liens d'un rang inférieur.</p><button id="btnLogin2" class="btn glass sm">Se connecter avec Discord</button></div>
           <p id="noGuild" class="hidden" style="font-weight:700">Aucun serveur où tu as la permission « Gérer le serveur ».</p>
         </section>
@@ -497,7 +499,7 @@ function runRedirect(slug) {
 }
 
 /* ---------- Application ---------- */
-var session = null, selected = null, uid = null, demo = false, slugOk = false, slugTimer, isAdmin = false, slugAuto = true, slugReplace = null, inviteOk = false, inviteTimer;
+var session = null, selected = null, uid = null, demo = false, slugOk = false, slugTimer, isAdmin = false, slugAuto = true, slugReplace = null, inviteOk = false, inviteTimer, guildLinks = {};
 
 function runApp() {
   $("hHost").textContent = HOST + "/"; $("pre").textContent = HOST + "/"; $("pvH").textContent = HOST + "/";
@@ -576,7 +578,7 @@ function loadSession(token) {
       .sort(function (a, b) { return (b.owner - a.owner) || a.name.localeCompare(b.name); });
     session = { user: d[0], guilds: guilds };
     return ensureUid();
-  }).then(function (u) { uid = u; openDash(); loadMyLinks(); })
+  }).then(function (u) { uid = u; openDash(); loadMyLinks(); loadGuildLinks(); })
   .catch(function (e) {
     sessionStorage.removeItem("dc_session"); show($("btnLogin")); show($("btnFree"));
     loginError(e.code ? fbError(e) : e.message); $("help").open = true;
@@ -615,7 +617,8 @@ function renderGuilds() {
     var b = document.createElement("button"); b.className = "guild"; b.type = "button";
     var n = document.createElement("span"); n.className = "gn"; n.textContent = g.name;
     var t = document.createElement("span"); t.className = "gt"; t.textContent = g.owner ? "👑 Propriétaire" : "🛠️ Gestionnaire";
-    b.appendChild(iconNode("gi", g.id, g.icon, g.name)); b.appendChild(n); b.appendChild(t);
+    var gl = document.createElement("span"); gl.className = "gl"; b._g = g;
+    b.appendChild(iconNode("gi", g.id, g.icon, g.name)); b.appendChild(n); b.appendChild(t); b.appendChild(gl);
     b.onclick = function () { pick(g, b); };
     box.appendChild(b);
   });
@@ -624,7 +627,7 @@ function renderGuilds() {
 function pick(g, btn) {
   if (selected && selected.id === g.id) {
     selected = null; btn.classList.remove("sel"); $("pvN").textContent = "Ton serveur"; $("pvS").textContent = "Aperçu de ton lien";
-    var p0 = $("pvI"); p0.textContent = "?"; if ($("invite").value.trim()) onInvite(); refresh(); return;
+    var p0 = $("pvI"); p0.textContent = "?"; $("guildMsg").textContent = ""; if ($("invite").value.trim()) onInvite(); refresh(); return;
   }
   selected = g;
   Array.prototype.forEach.call(document.querySelectorAll(".guild"), function (x) { x.classList.remove("sel"); });
@@ -637,6 +640,7 @@ function pick(g, btn) {
     $("slug").value = g.name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 32);
     onSlug();
   }
+  showGuildMsg();
   if ($("invite").value.trim()) onInvite();
   refresh();
 }
@@ -768,7 +772,7 @@ function createLink() {
     copy(ORIGIN + "/" + slug, "Lien copié dans le presse-papiers ✓");
     $("slug").value = ""; $("invite").value = ""; slugOk = false; inviteOk = false; slugReplace = null; slugAuto = true;
     setSt($("slug"), $("slugSt"), "", ""); setSt($("invite"), $("invSt"), "", ""); $("pvSlug").textContent = slug;
-    loadMyLinks();
+    loadMyLinks(); if (session) loadGuildLinks();
   }).catch(function (e) { msg(e.code ? fbError(e) : e.message, "err"); })
   .then(refresh);
 }
@@ -845,6 +849,36 @@ function rankOf(gid) {
   return 0;
 }
 function claimFor(gid, rank) { return FB.setDoc(FB.doc(FB.db, "claims", uid + "_" + gid), { uid: uid, guildId: gid, rank: rank }); }
+/* ----- Liens déjà existants sur MES serveurs (propriétaire > gestionnaire > visiteur) ----- */
+function guildStatus(g) {
+  var ex = guildLinks[g.id] || [], my = isAdmin ? 3 : (g.owner ? 2 : 1), me = RANK_LABEL[g.owner ? 2 : 1];
+  if (!ex.length) return { kind: "ok", badge: "", cls: "", msg: "✅ Aucun lien pour ce serveur pour l'instant." };
+  var blockers = ex.filter(function (l) { return l.ownerUid === uid || my <= (l.ownerRank || 0); });
+  if (blockers.length) {
+    var b = blockers[0];
+    return { kind: "no", badge: "🔗 Déjà pris", cls: "blk", msg: "❌ Ce serveur a déjà un lien : " + HOST + "/" + b.slug + " (" + RANK_LABEL[b.ownerRank || 0] + (b.ownerUid === uid ? ", c'est le tien : supprime-le d'abord" : ", d'un rang égal ou supérieur au tien") + ")." };
+  }
+  var x = ex[0];
+  return { kind: "warn", badge: "🔁 Remplaçable", cls: "rep", msg: "🔁 Ce serveur a déjà un lien (" + HOST + "/" + x.slug + ") créé par " + (x.ownerName || "un visiteur") + " (" + RANK_LABEL[x.ownerRank || 0] + "). Comme tu es " + me + ", il sera supprimé automatiquement et remplacé par le tien." };
+}
+function showGuildMsg() {
+  var m = $("guildMsg");
+  if (!selected) { m.className = "fmsg"; m.textContent = ""; return; }
+  var st = guildStatus(selected); m.className = "fmsg " + st.kind; m.textContent = st.msg;
+}
+function loadGuildLinks() {
+  if (!session) return Promise.resolve();
+  var col = FB.collection(FB.db, "links");
+  return Promise.all(chunk(session.guilds.map(function (g) { return g.id; }), 30).map(function (ids) { return FB.getDocs(FB.query(col, FB.where("guildId", "in", ids))); }))
+    .then(function (snaps) {
+      guildLinks = {};
+      snaps.forEach(function (sn) { sn.docs.forEach(function (d) { var l = d.data(); (guildLinks[l.guildId] = guildLinks[l.guildId] || []).push(l); }); });
+      Array.prototype.forEach.call(document.querySelectorAll(".guild"), function (b) {
+        var st = guildStatus(b._g), gl = b.querySelector(".gl"); gl.className = "gl " + st.cls; gl.textContent = st.badge;
+      });
+      showGuildMsg();
+    }).catch(function () {});
+}
 function replaceOld(old) {
   var r = rankOf(old.guildId);
   var pre = (!isAdmin && r > 0 && old.guildId) ? claimFor(old.guildId, r) : Promise.resolve();
