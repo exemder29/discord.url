@@ -16,6 +16,11 @@ service cloud.firestore {
         : 0;
     }
 
+    // Catégories de l'annuaire
+    function validCat(c) {
+      return c in ['gaming', 'communaute', 'anime', 'musique', 'art', 'code', 'etudes', 'entraide', 'roleplay', 'bot', 'autre'];
+    }
+
     // Admin : le code saisi doit être identique à celui du document config/admin (jamais lisible par le site)
     function isAdmin() {
       return request.auth != null
@@ -125,7 +130,7 @@ service cloud.firestore {
 
       allow create: if request.auth != null
         && gid.matches('^[0-9]{15,22}$')
-        && request.resource.data.keys().hasOnly(['guildId', 'name', 'icon', 'invite', 'description', 'category', 'memberCount', 'ownerUid', 'ownerDiscordId', 'ownerName', 'ownerRank', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['guildId', 'name', 'icon', 'invite', 'description', 'category', 'category2', 'memberCount', 'ownerUid', 'ownerDiscordId', 'ownerName', 'ownerRank', 'createdAt'])
         && request.resource.data.keys().hasAll(['guildId', 'name', 'invite', 'description', 'category', 'ownerUid', 'ownerDiscordId', 'ownerRank', 'createdAt'])
         && request.resource.data.guildId == gid
         && request.resource.data.ownerUid == request.auth.uid
@@ -135,7 +140,10 @@ service cloud.firestore {
         && request.resource.data.invite.matches('^https://discord\\.gg/[A-Za-z0-9-]{2,32}$')
         && request.resource.data.description is string
         && request.resource.data.description.size() >= 10 && request.resource.data.description.size() <= 300
-        && request.resource.data.category in ['gaming', 'communaute', 'anime', 'musique', 'art', 'code', 'etudes', 'entraide', 'roleplay', 'autre']
+        && validCat(request.resource.data.category)
+        // 2e catégorie facultative (max 2 au total), différente de la première
+        && (!('category2' in request.resource.data)
+            || (validCat(request.resource.data.category2) && request.resource.data.category2 != request.resource.data.category))
         && (!('icon' in request.resource.data) || request.resource.data.icon == null
             || (request.resource.data.icon is string && request.resource.data.icon.size() <= 64))
         && (!('memberCount' in request.resource.data)

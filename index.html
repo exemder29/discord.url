@@ -201,6 +201,11 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
 .svdesc{margin-top:8px;font-size:17px;font-weight:600;white-space:pre-line;word-break:break-word}
 .svinfo{display:grid;gap:8px;margin-top:22px;font-weight:700}
 .svback{margin-bottom:18px}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.tab{cursor:pointer;border:2px solid rgba(255,255,255,.4);background:rgba(255,255,255,.14);color:#fff;font:800 18px "Baloo 2",Nunito,sans-serif;padding:10px 22px;border-radius:18px;transition:background .15s,transform .15s}
+.tab:hover{background:rgba(255,255,255,.3);transform:translateY(-2px)}
+.tab.on{background:#fff;color:#5b2fd6;border-color:#fff}
+.svbadges{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .lk a.btn{color:#fff;font:800 15px "Baloo 2",Nunito,sans-serif;display:inline-flex;overflow:visible}
 .svbadge{display:inline-block;font-size:12px;font-weight:800;padding:2px 10px;border-radius:999px;background:#fff;color:#5b2fd6;margin-right:6px}
 
@@ -357,7 +362,7 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
   <main id="adminView" class="hidden">
     <div class="dash-head">
       <h1>🔐 Espace <span class="rainbow">admin</span></h1>
-      <p class="mut" style="font-weight:700;font-size:18px">Gère tous les liens du site.</p>
+      <p class="mut" style="font-weight:700;font-size:18px">Gère tous les liens et tous les serveurs du site.</p>
     </div>
     <section class="panel" id="adLock" style="max-width:520px;margin:0 auto 22px">
       <div class="ptitle"><h2>Code admin</h2></div>
@@ -369,6 +374,10 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
       </div>
     </section>
     <div id="adPanel" class="hidden">
+      <div class="tabs">
+        <button class="tab on" id="adTabLinks" type="button">🔗 Liens</button>
+        <button class="tab" id="adTabServers" type="button">🌐 Serveurs</button>
+      </div>
       <section class="panel">
         <div class="field"><span style="opacity:.7">🔎</span><input id="adSearch" placeholder="Rechercher un nom de lien…" autocomplete="off"></div>
         <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
@@ -377,8 +386,14 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
           <button id="adQuit" class="btn red sm">🚪 Quitter le mode admin</button>
         </div>
       </section>
-      <div class="sec"><h2>Tous les liens</h2><span class="cnt" id="adCount">…</span></div>
-      <div id="adList" class="links"></div>
+      <div id="adLinksBox">
+        <div class="sec"><h2>Tous les liens</h2><span class="cnt" id="adCount">…</span></div>
+        <div id="adList" class="links"></div>
+      </div>
+      <div id="adServersBox" class="hidden">
+        <div class="sec"><h2>Tous les serveurs</h2><span class="cnt" id="adSvCount">…</span></div>
+        <div id="adSvList" class="links"></div>
+      </div>
     </div>
   </main>
 
@@ -435,6 +450,11 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
       <label for="svCat">Catégorie</label>
       <div class="field"><select id="svCat"></select></div>
 
+      <label for="svCat2">Deuxième catégorie <small style="opacity:.8">(facultatif)</small></label>
+      <div class="field"><select id="svCat2"></select></div>
+      <small class="hint">Tu peux choisir jusqu'à 2 catégories, par exemple « Communauté » + « Bot ».</small>
+      <div class="fmsg" id="svCatMsg"></div>
+
       <label for="svDesc">Description</label>
       <div class="field"><textarea id="svDesc" maxlength="300" placeholder="De quoi parle ton serveur ? Qu'est-ce qu'on y fait ? (10 à 300 caractères)"></textarea></div>
       <small class="hint" id="svCount">0/300</small>
@@ -456,7 +476,7 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
 /* =====================================================================
    ⚙️ CONFIGURATION — la seule chose à modifier
    ===================================================================== */
-var DISCORD_CLIENT_ID = "COLLE_TON_CLIENT_ID_ICI";   // Discord Developer Portal → ton app → OAuth2 → Client ID
+var DISCORD_CLIENT_ID = "1564338650450366495";   // Discord Developer Portal → ton app → OAuth2 → Client ID
 
 /* Adresse EXACTE de ton site (optionnel). Laisse vide : détection automatique.
    GitHub Pages « projet » : "https://TON-PSEUDO.github.io/NOM-DU-DEPOT/"
@@ -646,11 +666,12 @@ function runApp() {
   $("svAdd").onclick = function () { openServers(true, "ajouter"); }; $("btnLogin4").onclick = login;
   Array.prototype.forEach.call(document.querySelectorAll(".svBack"), function (a) { a.href = ORIGIN + "/serveurs"; a.onclick = function (e) { e.preventDefault(); openServers(true, ""); }; });
   $("svInvite").addEventListener("input", onSvInvite);
-  $("svDesc").addEventListener("input", svRefresh); $("svCat").addEventListener("change", svRefresh);
+  $("svDesc").addEventListener("input", svRefresh); $("svCat").addEventListener("change", svRefresh); $("svCat2").addEventListener("change", svRefresh);
   $("svSubmit").onclick = svCreate; $("svSearch").addEventListener("input", svRender);
   $("nfClear").onclick = clearNotifs;
   $("adGo").onclick = adminUnlock; $("adCode").addEventListener("keydown", function (e) { if (e.key === "Enter") adminUnlock(); });
-  $("adSearch").addEventListener("input", adminRender); $("adRefresh").onclick = adminLoad; $("adQuit").onclick = adminQuit;
+  $("adSearch").addEventListener("input", adminSearch); $("adRefresh").onclick = adminRefresh; $("adQuit").onclick = adminQuit;
+  $("adTabLinks").onclick = function () { adminTab("links"); }; $("adTabServers").onclick = function () { adminTab("servers"); };
   Array.prototype.forEach.call(document.querySelectorAll(".adBack"), function (b) { b.onclick = function () { location.href = REDIRECT_URI; }; });
   $("slug").addEventListener("input", function () { slugAuto = false; onSlug(); });
   $("invite").addEventListener("input", onInvite);
@@ -959,7 +980,7 @@ function adminQuit() {
     isAdmin = false; adAll = []; location.href = REDIRECT_URI;
   }).catch(function (e) { toast(e.code === "permission-denied" ? "Impossible de quitter : publie les nouvelles règles Firestore." : fbError(e), "err"); });
 }
-function adminShow() { show($("adLock"), false); show($("adPanel")); adminLoad(); }
+function adminShow() { show($("adLock"), false); show($("adPanel")); adminLoad(); adminSvLoad(); }
 function adminLoad() {
   $("adCount").textContent = "…"; $("adList").textContent = "";
   var ld = document.createElement("div"); ld.className = "empty"; ld.textContent = "⏳ Chargement des liens…"; $("adList").appendChild(ld);
@@ -968,7 +989,53 @@ function adminLoad() {
     adminRender();
   }).catch(function (e) { $("adList").textContent = ""; var er = document.createElement("div"); er.className = "alert err"; er.textContent = fbError(e); $("adList").appendChild(er); });
 }
+var adSv = [], adTab = "links";
+function adminTab(t) {
+  adTab = t; $("adTabLinks").classList.toggle("on", t === "links"); $("adTabServers").classList.toggle("on", t === "servers");
+  show($("adLinksBox"), t === "links"); show($("adServersBox"), t === "servers");
+  $("adSearch").placeholder = t === "links" ? "Rechercher un nom de lien…" : "Rechercher un serveur…"; $("adSearch").value = "";
+  adminRender(); adminSvRender();
+}
+function adminSearch() { if (adTab === "links") adminRender(); else adminSvRender(); }
+function adminRefresh() { adminLoad(); adminSvLoad(); }
+function adminTabLabels() { $("adTabLinks").textContent = "🔗 Liens" + (adAll.length ? " (" + adAll.length + ")" : ""); $("adTabServers").textContent = "🌐 Serveurs" + (adSv.length ? " (" + adSv.length + ")" : ""); }
+function adminSvLoad() {
+  $("adSvCount").textContent = "…"; $("adSvList").textContent = "";
+  var ld = document.createElement("div"); ld.className = "empty"; ld.textContent = "⏳ Chargement des serveurs…"; $("adSvList").appendChild(ld);
+  FB.getDocs(FB.query(FB.collection(FB.db, "servers"), FB.orderBy("createdAt", "desc"))).then(function (snap) {
+    adSv = snap.docs.map(function (d) { return d.data(); }); adminSvRender();
+  }).catch(function (e) { $("adSvList").textContent = ""; var er = document.createElement("div"); er.className = "alert err"; er.textContent = fbError(e); $("adSvList").appendChild(er); });
+}
+function adminSvRender() {
+  adminTabLabels();
+  var q = adTab === "servers" ? $("adSearch").value.trim().toLowerCase() : "";
+  var list = adSv.filter(function (s) { return !q || (s.name + " " + svCatLabels(s) + " " + (s.ownerName || "") + " " + s.guildId).toLowerCase().indexOf(q) >= 0; });
+  $("adSvCount").textContent = q ? list.length + " / " + adSv.length : adSv.length;
+  var box = $("adSvList"); box.textContent = "";
+  if (!list.length) { var e = document.createElement("div"); e.className = "empty"; e.textContent = q ? "Aucun serveur ne correspond à « " + q + " »." : "Aucun serveur pour l'instant."; box.appendChild(e); return; }
+  list.forEach(function (s) {
+    var c = document.createElement("div"); c.className = "lk";
+    var top = document.createElement("div"); top.className = "lk-top";
+    var t = document.createElement("div"); t.style.minWidth = 0;
+    var nm = document.createElement("div"); nm.className = "sv-name"; nm.textContent = s.name;
+    var sm = document.createElement("small");
+    var dt = s.createdAt && s.createdAt.seconds ? " · " + new Date(s.createdAt.seconds * 1000).toLocaleDateString("fr-FR") : "";
+    sm.textContent = svCatLabels(s) + " · " + RANK_LABEL[s.ownerRank || 0] + " · par " + (s.ownerName || "un visiteur") + dt;
+    t.appendChild(nm); t.appendChild(sm); top.appendChild(iconNode("gi", s.guildId, s.icon, s.name)); top.appendChild(t);
+    var act = document.createElement("div"); act.className = "lk-act";
+    var view = document.createElement("button"); view.className = "btn glass sm"; view.textContent = "👁️ Voir"; view.onclick = function () { openServers(true, s.guildId); };
+    var del = document.createElement("button"); del.className = "btn red sm"; del.textContent = "🗑️ Supprimer";
+    del.onclick = function () {
+      if (!confirm("ADMIN – retirer « " + s.name + " » de l'annuaire ?")) return;
+      FB.deleteDoc(FB.doc(FB.db, "servers", s.guildId)).then(function () {
+        adSv = adSv.filter(function (x) { return x.guildId !== s.guildId; }); toast("Serveur retiré"); adminSvRender();
+      }).catch(function (e) { toast(fbError(e), "err"); });
+    };
+    act.appendChild(view); act.appendChild(del); c.appendChild(top); c.appendChild(act); box.appendChild(c);
+  });
+}
 function adminRender() {
+  adminTabLabels();
   var q = $("adSearch").value.trim().toLowerCase().replace(/\s+/g, "-");
   var list = adAll.filter(function (l) { return !q || String(l.slug).indexOf(q) >= 0; });
   $("adCount").textContent = q ? list.length + " / " + adAll.length : adAll.length;
@@ -1204,9 +1271,11 @@ function clearNotifs() {
 
 /* ----- Annuaire de serveurs : /serveurs (liste), /serveurs/ID (page du serveur), /serveurs/ajouter (ajout) ----- */
 var SV_CATS = [["gaming", "🎮 Gaming"], ["communaute", "💬 Communauté"], ["anime", "🎌 Anime & Manga"], ["musique", "🎵 Musique"], ["art", "🎨 Art & Créa"],
-  ["code", "💻 Programmation"], ["etudes", "📚 Études & Savoir"], ["entraide", "🤝 Entraide"], ["roleplay", "🎭 Roleplay"], ["autre", "🌍 Autre"]];
+  ["code", "💻 Programmation"], ["etudes", "📚 Études & Savoir"], ["entraide", "🤝 Entraide"], ["roleplay", "🎭 Roleplay"], ["bot", "🤖 Bot"], ["autre", "🌍 Autre"]];
 function svViews() { return ["serversView", "svDetail", "svAddView"]; }
 var svAll = [], svCat = "", svLoaded = false, svSub = "", svInfo = null, svBlock = null, svReplace = null, svPicked = null, svCur = null, svTimer;
+function svCatsOf(s) { return [s.category, s.category2].filter(Boolean); }
+function svCatLabels(s) { return svCatsOf(s).map(svLabel).join(" + "); }
 function svLabel(id) { for (var i = 0; i < SV_CATS.length; i++) if (SV_CATS[i][0] === id) return SV_CATS[i][1]; return id; }
 function serversOn() { return svViews().some(function (id) { return !$(id).classList.contains("hidden"); }); }
 function svUrl(sub) { return ORIGIN + "/serveurs" + (sub ? "/" + sub : ""); }
@@ -1248,6 +1317,11 @@ function svRenderCats() {
     var o0 = document.createElement("option"); o0.value = ""; o0.textContent = "Choisis une catégorie…"; sel.appendChild(o0);
     SV_CATS.forEach(function (c) { var o = document.createElement("option"); o.value = c[0]; o.textContent = c[1]; sel.appendChild(o); });
   }
+  var sel2 = $("svCat2");
+  if (!sel2.options.length) {
+    var n0 = document.createElement("option"); n0.value = ""; n0.textContent = "— Aucune —"; sel2.appendChild(n0);
+    SV_CATS.forEach(function (c) { var o = document.createElement("option"); o.value = c[0]; o.textContent = c[1]; sel2.appendChild(o); });
+  }
   var box = $("svCats"); box.textContent = "";
   [["", "✨ Toutes"]].concat(SV_CATS).forEach(function (c) {
     var b = document.createElement("button"); b.type = "button"; b.className = "cat" + (svCat === c[0] ? " on" : ""); b.textContent = c[1];
@@ -1266,7 +1340,7 @@ function svRender() {
   var box = $("svList"); if (!svLoaded) return;
   var q = $("svSearch").value.trim().toLowerCase();
   var list = svAll.filter(function (s) {
-    return (!svCat || s.category === svCat) && (!q || (s.name + " " + s.description + " " + svLabel(s.category)).toLowerCase().indexOf(q) >= 0);
+    return (!svCat || svCatsOf(s).indexOf(svCat) >= 0) && (!q || (s.name + " " + s.description + " " + svCatLabels(s)).toLowerCase().indexOf(q) >= 0);
   });
   $("svCnt").textContent = (q || svCat) ? list.length + " / " + svAll.length : svAll.length; box.textContent = "";
   if (!list.length) {
@@ -1278,8 +1352,9 @@ function svRender() {
     var a = document.createElement("a"); a.className = "svtile"; a.href = svUrl(s.guildId);
     a.onclick = function (ev) { ev.preventDefault(); openServers(true, s.guildId); };
     var nm = document.createElement("div"); nm.className = "sv-name"; nm.textContent = s.name;
-    var bd = document.createElement("span"); bd.className = "svbadge"; bd.style.margin = "0"; bd.textContent = svLabel(s.category);
-    a.appendChild(iconNode("gi", s.guildId, s.icon, s.name)); a.appendChild(nm); a.appendChild(bd);
+    var bds = document.createElement("div"); bds.className = "svbadges";
+    svCatsOf(s).forEach(function (c) { var bd = document.createElement("span"); bd.className = "svbadge"; bd.style.margin = "0"; bd.textContent = svLabel(c); bds.appendChild(bd); });
+    a.appendChild(iconNode("gi", s.guildId, s.icon, s.name)); a.appendChild(nm); a.appendChild(bds);
     if (typeof s.memberCount === "number") { var m = document.createElement("small"); m.textContent = "~" + s.memberCount.toLocaleString("fr-FR") + " membres"; a.appendChild(m); }
     box.appendChild(a);
   });
@@ -1299,7 +1374,7 @@ function svDetailRender() {
   var t = document.createElement("div"); t.style.minWidth = 0;
   var h = document.createElement("h1"); h.textContent = s.name;
   var meta = document.createElement("div"); meta.style.marginTop = "8px";
-  var bd = document.createElement("span"); bd.className = "svbadge"; bd.textContent = svLabel(s.category); meta.appendChild(bd);
+  svCatsOf(s).forEach(function (c) { var bd = document.createElement("span"); bd.className = "svbadge"; bd.textContent = svLabel(c); meta.appendChild(bd); });
   if (typeof s.memberCount === "number") meta.appendChild(document.createTextNode("~" + s.memberCount.toLocaleString("fr-FR") + " membres"));
   t.appendChild(h); t.appendChild(meta); hero.appendChild(iconNode("gi", s.guildId, s.icon, s.name)); hero.appendChild(t); box.appendChild(hero);
   var d2 = document.createElement("h2"); d2.textContent = "Description"; d2.style.cssText = "margin-top:26px;font-size:22px"; box.appendChild(d2);
@@ -1376,7 +1451,9 @@ function svMsg(t, k) { var e = $("svMsg"); e.className = "alert " + k; e.textCon
 function svRefresh() {
   var raw = $("svDesc").value, n = raw.trim().length;
   $("svCount").textContent = raw.length + "/300" + (n > 0 && n < 10 ? " · encore " + (10 - n) + " caractère(s) minimum" : "");
-  $("svSubmit").disabled = !(svPicked && svInfo && !svBlock && $("svCat").value && n >= 10 && n <= 300);
+  var c1 = $("svCat").value, c2 = $("svCat2").value, same = !!c2 && c1 === c2, cm = $("svCatMsg");
+  cm.className = "fmsg " + (same ? "no" : ""); cm.textContent = same ? "❌ Choisis deux catégories différentes (ou laisse la deuxième vide)." : "";
+  $("svSubmit").disabled = !(svPicked && svInfo && !svBlock && c1 && !same && n >= 10 && n <= 300);
 }
 function onSvInvite() {
   var v = $("svInvite").value; svInfo = null; clearTimeout(svTimer); show($("svPrev"), false); svRefresh();
@@ -1418,7 +1495,7 @@ function svCheck(code, v) {
 }
 function svCreate() {
   if (!svPicked || !svInfo || svBlock || !session) return;
-  var g = svPicked, info = svInfo, old = svReplace, desc = $("svDesc").value.trim(), cat = $("svCat").value;
+  var g = svPicked, info = svInfo, old = svReplace, desc = $("svDesc").value.trim(), cat = $("svCat").value, cat2 = $("svCat2").value;
   $("svSubmit").disabled = true; svMsg("Ajout en cours…", "warn");
   ensureUid().then(function (u) {
     uid = u;
@@ -1426,6 +1503,7 @@ function svCreate() {
     var data = { guildId: g.id, name: String(g.name).slice(0, 100), icon: g.icon || null, invite: "https://discord.gg/" + info.code,
       description: desc, category: cat, ownerUid: uid, ownerDiscordId: session.user.id,
       ownerName: String(session.user.global_name || session.user.username).slice(0, 100), ownerRank: rank, createdAt: FB.serverTimestamp() };
+    if (cat2 && cat2 !== cat) data.category2 = cat2;
     if (typeof info.members === "number") data.memberCount = info.members;
     var ref = FB.doc(FB.db, "servers", g.id);
     var chain = step("enregistrement de ton rang", claimFor(g.id, rank));
@@ -1433,7 +1511,7 @@ function svCreate() {
     return chain.then(function () { return step("ajout du serveur", FB.setDoc(ref, data)); });
   }).then(function () {
     confetti(); toast("✅ Serveur ajouté à la liste !");
-    $("svInvite").value = ""; $("svDesc").value = ""; $("svCat").value = ""; svInfo = null; svReplace = null; svBlock = null; svPicked = null;
+    $("svInvite").value = ""; $("svDesc").value = ""; $("svCat").value = ""; $("svCat2").value = ""; svInfo = null; svReplace = null; svBlock = null; svPicked = null;
     svSetInv("", "", ""); show($("svPrev"), false); show($("svMsg"), false); show($("svForm"), false);
     return openServers(true, g.id);
   }).catch(function (e) { svMsg((e.step ? "Étape « " + e.step + " » refusée ou en échec. " : "") + (e.code ? fbError(e) + " [" + e.code + "]" : e.message), "err"); })
