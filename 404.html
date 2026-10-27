@@ -339,7 +339,7 @@ label{display:block;font-weight:800;font-size:15px;margin:18px 0 8px}
 /* =====================================================================
    ⚙️ CONFIGURATION — la seule chose à modifier
    ===================================================================== */
-var DISCORD_CLIENT_ID = "1564338650450366495";   // Discord Developer Portal → ton app → OAuth2 → Client ID
+var DISCORD_CLIENT_ID = "COLLE_TON_CLIENT_ID_ICI";   // Discord Developer Portal → ton app → OAuth2 → Client ID
 
 /* Adresse EXACTE de ton site (optionnel). Laisse vide : détection automatique.
    GitHub Pages « projet » : "https://TON-PSEUDO.github.io/NOM-DU-DEPOT/"
@@ -678,7 +678,7 @@ function onSlug() {
       if (inp.value !== v) return;
       if (!snap.exists() || isExpired(snap.data())) { slugOk = true; slugReplace = snap.exists() ? snap.data() : null; setSt(inp, $("slugSt"), "ok", "Disponible ✓", "✅ Ce nom est disponible"); }
       else {
-        var d = snap.data(), rk = d.ownerRank || 0, by = d.ownerName || "un visiteur", mine = !!uid && d.ownerUid === uid;
+        var d = snap.data(), rk = d.ownerRank || 0, by = d.ownerName || "un visiteur", mine = isMine(d) && !(session && !d.ownerDiscordId && rankOf(d.guildId) > rk);
         if (mine) setSt(inp, $("slugSt"), "no", "Déjà à toi", "⚠️ Ce nom est déjà un de tes liens. Supprime-le d'abord dans « Mes liens » si tu veux le refaire :", "no", v);
         else if (isAdmin || rankOf(d.guildId) > rk) {
           slugOk = true; slugReplace = d;
@@ -721,10 +721,10 @@ function checkInvite(code, inp, v) {
   }).then(function (snap) {
     if (inp.value !== v) return;
     var ex = snap.docs.map(function (d) { return d.data(); }).filter(function (l) { return !isExpired(l); }), my = isAdmin ? 3 : rankOf(gid);
-    var blockers = ex.filter(function (l) { return l.ownerUid === uid || my <= (l.ownerRank || 0); });
+    var blockers = ex.filter(function (l) { return blocksMe(l, my); });
     var name = info && info.guild ? " pour « " + info.guild.name + " »" : "";
     if (blockers.length) {
-      var b = blockers[0], mine = b.ownerUid === uid; inviteBlock = b;
+      var b = blockers[0], mine = isMine(b); inviteBlock = b;
       setSt(inp, $("invSt"), "no", "Déjà pris", "❌ Ce serveur a déjà un lien (" + RANK_LABEL[b.ownerRank || 0] + (mine ? ", c'est le tien" : ", seul un rang supérieur peut le remplacer") + "). Tu peux l'utiliser tel quel :", "no", b.slug);
     } else if (ex.length) {
       inviteOk = true;
@@ -874,10 +874,10 @@ function claimFor(gid, rank) { return FB.setDoc(FB.doc(FB.db, "claims", uid + "_
 function guildStatus(g) {
   var ex = guildLinks[g.id] || [], my = isAdmin ? 3 : (g.owner ? 2 : 1), me = RANK_LABEL[g.owner ? 2 : 1];
   if (!ex.length) return { kind: "ok", badge: "", cls: "", msg: "✅ Aucun lien pour ce serveur pour l'instant." };
-  var blockers = ex.filter(function (l) { return l.ownerUid === uid || my <= (l.ownerRank || 0); });
+  var blockers = ex.filter(function (l) { return blocksMe(l, my); });
   if (blockers.length) {
     var b = blockers[0];
-    return { kind: "no", badge: "🔗 Déjà pris", cls: "blk", slug: b.slug, link: b, msg: "❌ Ce serveur a déjà un lien (" + RANK_LABEL[b.ownerRank || 0] + (b.ownerUid === uid ? ", c'est le tien" : ", d'un rang égal ou supérieur au tien") + ") :" };
+    return { kind: "no", badge: "🔗 Déjà pris", cls: "blk", slug: b.slug, link: b, msg: "❌ Ce serveur a déjà un lien (" + RANK_LABEL[b.ownerRank || 0] + (isMine(b) ? ", c'est le tien" : ", d'un rang égal ou supérieur au tien") + ") :" };
   }
   var x = ex[0];
   return { kind: "warn", badge: "🔁 Remplaçable", cls: "rep", slug: x.slug, msg: "🔁 Ce serveur a déjà un lien créé par " + (x.ownerName || "un visiteur") + " (" + RANK_LABEL[x.ownerRank || 0] + "). Comme tu es " + me + ", il sera supprimé automatiquement et remplacé par le tien :" };
@@ -908,7 +908,7 @@ function getPinned() {
 }
 function setPinned(a) { pinnedMem = a.slice(0, 50); try { localStorage.setItem("dl_pinned", JSON.stringify(pinnedMem)); } catch (e) {} }
 function pinLink(l) {
-  if (l.ownerUid === uid) { msg("ℹ️ C'est déjà un de tes liens : il est dans « Mes liens » juste en dessous.", "warn"); }
+  if (isMine(l)) { msg("ℹ️ C'est déjà un de tes liens : il est dans « Mes liens » juste en dessous.", "warn"); }
   else {
     var list = getPinned().filter(function (p) { return p.slug !== l.slug; });
     list.unshift({ slug: l.slug, guildId: l.guildId || null, guildName: l.guildName, guildIcon: l.guildIcon || null, ownerName: l.ownerName || null, ownerRank: l.ownerRank || 0, ownerUid: l.ownerUid });
@@ -928,6 +928,18 @@ function checkPinned(map) {
     var keep = pins.filter(function (p) { return !p._gone; });
     if (keep.length !== pins.length) setPinned(keep);
   });
+}
+/* Propriété "dans ma peau actuelle" : un lien créé AVEC Discord n'est à moi que si je suis connecté avec ce compte Discord
+   (sinon, un visiteur sur le même navigateur le verrait et pourrait le supprimer). */
+function isMine(l) {
+  if (!uid || l.ownerUid !== uid) return false;
+  if (l.ownerDiscordId) return !!(session && session.user && session.user.id === l.ownerDiscordId);
+  return true;
+}
+/* Ce lien m'empêche-t-il d'en créer un pour ce serveur ? (rang égal/supérieur, ou déjà à moi) */
+function blocksMe(l, my) {
+  if (my <= (l.ownerRank || 0)) return true;
+  return isMine(l) && !(session && !l.ownerDiscordId);   // ancien lien "visiteur" laissé par ce navigateur : remplaçable si je suis connecté
 }
 function step(name, p) { return Promise.resolve(p).catch(function (e) { try { e.step = name; } catch (x) {} throw e; }); }
 function replaceOld(old) {
@@ -968,11 +980,12 @@ function loadMyLinks() {
   }).then(function (map) {
     Object.keys(map).forEach(function (k) { if (isExpired(map[k])) { FB.deleteDoc(FB.doc(FB.db, "links", k)).catch(function () {}); delete map[k]; } });
     var list = Object.keys(map).map(function (k) { return map[k]; }).sort(function (a, b) { return ((b.createdAt && b.createdAt.seconds) || 9e9) - ((a.createdAt && a.createdAt.seconds) || 9e9); });
+    list = list.filter(function (l) { return !(l.ownerUid === uid && !isMine(l) && rankOf(l.guildId) === 0 && !pinnedSet[l.slug]); });
     document.querySelector(".sec h2").textContent = session ? "Mes liens & ceux de mes serveurs" : "Mes liens";
     $("cnt").textContent = list.length; box.textContent = "";
     if (!list.length) { var e = document.createElement("div"); e.className = "empty"; e.textContent = session ? "Aucun lien pour toi ni pour tes serveurs pour l'instant ✨" : "Tu n'as pas encore de lien. Crée le premier juste au-dessus ✨"; box.appendChild(e); return; }
     list.forEach(function (l) {
-      var mine = l.ownerUid === uid, lr = l.ownerRank || 0, mr = rankOf(l.guildId), canDel = mine || isAdmin || mr > lr;
+      var mine = isMine(l), lr = l.ownerRank || 0, mr = rankOf(l.guildId), canDel = mine || isAdmin || mr > lr;
       var c = document.createElement("div"); c.className = "lk";
       var top = document.createElement("div"); top.className = "lk-top";
       var t = document.createElement("div"); t.style.minWidth = 0;
@@ -987,9 +1000,15 @@ function loadMyLinks() {
         var del = document.createElement("button"); del.className = "btn red sm"; del.textContent = "🗑️ Supprimer";
         del.onclick = function () {
           if (!confirm((mine ? "Supprimer définitivement " : isAdmin ? "ADMIN – supprimer le lien de quelqu'un d'autre : " : "Supprimer le lien d'une autre personne sur ton serveur : ") + HOST + "/" + l.slug + " ?")) return;
-          var pre = (!mine && mr > 0) ? claimFor(l.guildId, mr) : Promise.resolve();
-          pre.then(function () { return FB.deleteDoc(FB.doc(FB.db, "links", l.slug)); })
-            .then(function () { toast("Lien supprimé"); loadMyLinks(); onSlug(); }).catch(function (e) { toast(fbError(e), "err"); });
+          FB.getDoc(FB.doc(FB.db, "links", l.slug)).then(function (sn) {
+            if (!sn.exists()) throw { stale: "Ce lien a déjà été supprimé." };
+            var cur = sn.data(), lc = l.createdAt, cc = cur.createdAt;
+            var same = lc && cc ? (lc.seconds === cc.seconds && lc.nanoseconds === cc.nanoseconds) : cur.ownerUid === l.ownerUid;
+            if (!same || !(isMine(cur) || isAdmin || rankOf(cur.guildId) > (cur.ownerRank || 0))) throw { stale: "Ce lien a été remplacé par quelqu'un d'un rang supérieur : il n'est plus à toi." };
+            return (!isMine(cur) && mr > 0) ? claimFor(l.guildId, mr) : null;
+          }).then(function () { return FB.deleteDoc(FB.doc(FB.db, "links", l.slug)); })
+            .then(function () { toast("Lien supprimé"); loadMyLinks(); onSlug(); })
+            .catch(function (e) { if (e && e.stale) { toast(e.stale, "err"); loadMyLinks(); } else toast(fbError(e), "err"); });
         };
         act.appendChild(del);
       }
